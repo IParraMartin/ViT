@@ -101,7 +101,10 @@ train(
     optimizer=optimizer,
     scheduler=scheduler,
     device=device,
-    wandb=False
+    wandb=False,
+    checkpoint_dir='checkpoints',
+    checkpoint_interval=10,
+    accumulation_steps=4
 )
 
 evaluate(

@@ -61,7 +61,8 @@ def train(
         device: torch.device, 
         wandb: bool = False,
         checkpoint_dir: str = 'checkpoints',
-        checkpoint_interval: int = 20
+        checkpoint_interval: int = 20,
+        accumulation_steps: int = 4
     ):
     
     print(f"{'-'*50}\nDevice: {device}")
@@ -82,6 +83,9 @@ def train(
         running_train_loss = 0.0
         correct_train = 0
         total_train = 0
+
+        accumulation_steps = accumulation_steps
+
         for batch_idx, (signals, labels) in enumerate(train_dataloader):
             signals, labels = signals.to(device), labels.to(device)
             
@@ -91,11 +95,17 @@ def train(
             
             outputs = model(signals)
             loss = criterion(outputs, labels)
+            
+            # Normalize the loss
+            loss = loss / accumulation_steps
 
-            optimizer.zero_grad()
             loss.backward()
-            clip_grad_norm_(model.parameters(), max_norm=1.0)
-            optimizer.step()
+
+            # clip_grad_norm_(model.parameters(), max_norm=1.0)
+            if ((batch_idx + 1) % accumulation_steps == 0) or (batch_idx + 1 == len(train_dataloader)):
+                # Update weights
+                optimizer.step()
+                optimizer.zero_grad()
 
             running_train_loss += loss.item()
 

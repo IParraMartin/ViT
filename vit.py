@@ -2,11 +2,10 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 from torch import optim
+
 from torchsummary import summary
-
 import yaml
-
-from initialize import init_weights
+import initialize
 
 
 class PatchEmbeddingsConv(nn.Module):
@@ -151,7 +150,7 @@ class VisionTransformer(nn.Module):
         self.initialize_weights()
 
     def initialize_weights(self) -> None:
-        init_weights(self)
+        initialize.init_weights(self)
     
     def forward(self, x):
         n_samples = x.shape[0] # Get the number of samples
@@ -196,7 +195,7 @@ if __name__ == '__main__':
         return data.to(device), labels.to(device), model.to(device)
     fake_data, fake_labels, model = send_to_device(fake_data, fake_labels, model, device)
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CTCLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
     # Debugging foward pass to check if the model is working
@@ -209,6 +208,7 @@ if __name__ == '__main__':
         _, predicted = torch.max(outputs, 1)
         correct = (predicted == fake_labels).sum().item()
         accuracy = correct / config['batch_size']
+        
         print(f"Loss: {loss.item():.3f}")
         print(f"Accuracy: {accuracy * 100:.3f}%")
         print(f"\nModel Parameters: {sum(p.numel() for p in model.parameters())}")
