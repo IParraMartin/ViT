@@ -5,7 +5,7 @@ from torch import optim
 
 from torchsummary import summary
 import yaml
-import initialize
+import tools.initialize as initialize
 
 
 class PatchEmbeddingsConv(nn.Module):
@@ -195,7 +195,7 @@ if __name__ == '__main__':
         return data.to(device), labels.to(device), model.to(device)
     fake_data, fake_labels, model = send_to_device(fake_data, fake_labels, model, device)
 
-    criterion = nn.CTCLoss()
+    criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
     # Debugging foward pass to check if the model is working

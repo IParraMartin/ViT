@@ -1,9 +1,12 @@
 # MODEL CONFIG
+
 # Seed
 seed: 1337
+
 # Dataset
 audio_path: '/Users/inigoparra/Desktop/ESC-50-master-2/audio'
 annotations_path: '/Users/inigoparra/Desktop/ESC-50-master-2/meta/esc50.csv'
+
 # Data/Audio specifics
 n_samples: 22050
 sample_rate: 22050
