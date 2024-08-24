@@ -9,13 +9,13 @@ import numpy as np
 import random
 import yaml
 import os
+import wandb
+import argparse
 
 from vit import VisionTransformer
 from tools.optim_selector import set_optimizer
 from tools.scheduler_selector import set_scheduler
 from data import AudioData
-
-import wandb
 
 
 """
@@ -25,19 +25,8 @@ TO DO:
     - Try different number of samples
     - Analyze the performance with different h_dim values
     - Analyze the performance with different non-linearities
+    - Try weighting classes (CELoss) to see if it improves the model
 """
-
-
-# For reproducibility, set the seed for all random number generators
-def set_seed(seed):
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
-    np.random.seed(seed)
-    random.seed(seed)
-
-set_seed(42)
 
 
 def save_checkpoint(model, optimizer, scheduler, epoch, path):
@@ -60,7 +49,6 @@ def train(
         scheduler: optim.lr_scheduler, 
         device: torch.device, 
         wandb: bool = False,
-        checkpoint_dir: str = 'checkpoints',
         checkpoint_interval: int = 20,
         accumulation_steps: int = 4,
         grad_clip: bool = False
@@ -77,7 +65,7 @@ def train(
         log_interval = 10
 
     # Make a checkpoint directory
-    os.makedirs(checkpoint_dir, exist_ok=True)
+    os.makedirs('checkpoints', exist_ok=True)
 
     for epoch in range(n_epochs):
         # TRAIN
@@ -182,7 +170,7 @@ def train(
 
         # Save checkpoint every x epochs
         if epoch % checkpoint_interval == 0 and epoch != 0:
-            checkpoint_path = os.path.join(checkpoint_dir, f'checkpoint_{epoch+1}.pt')
+            checkpoint_path = os.path.join('checkpoints', f'checkpoint_{epoch+1}.pt')
             save_checkpoint(model, optimizer, scheduler, epoch, checkpoint_path)
 
     print("Training complete.")
@@ -219,3 +207,94 @@ def evaluate(model: nn.Module, test_dataloader: DataLoader, criterion: nn.Module
     # Evaluation results
     print(f'Test Loss: {test_loss:.3f} || Test Accuracy: {test_accuracy:.3f}')
     print("Evaluation complete.")
+
+
+if __name__ == '__main__':
+
+    # For reproducibility, set the seed for all random number generators
+    def set_seed(seed):
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        np.random.seed(seed)
+        random.seed(seed)
+
+    parser = argparse.ArgumentParser(description='Train a Vision Transformer model on audio data')
+    parser.add_argument('--config', type=str, default='vit_config.yaml', help='Path to the configuration file')
+    parser.add_argument('--log_wandb', type=bool, default=False, help='Log metrics to wandb')
+    args = parser.parse_args()
+
+    # Load configuration file
+    with open(args.config, 'r') as file:
+        config = yaml.safe_load(file)
+
+    # Set seed for reproducibility
+    set_seed(config['seed'])
+
+    # Data transformation
+    mel_spectrogram = torchaudio.transforms.MelSpectrogram(
+        sample_rate=config['sample_rate'],
+        n_fft=config['n_fft'],
+        hop_length=config['hop_length'],
+        n_mels=config['n_mels']
+    )
+
+    # Dataset
+    dataset = AudioData(
+        annotations_dir=config['annotations_path'], 
+        audio_dir=config['audio_path'],
+        transformation=mel_spectrogram,
+        target_sample_rate=config['sample_rate'],
+        n_samples=config['n_samples'],
+        augment=config['augment'],
+        n_augment=config['n_augment']
+    )
+
+    # Split dataset into training and validation sets and set dataloaders
+    generator = torch.Generator().manual_seed(config['seed'])
+    train_size = int((1 - config['validation_split']) * len(dataset))
+    test_size = int(config['test_split'] * len(dataset))
+    val_size = len(dataset) - train_size - test_size
+    train_dataset, val_dataset, test_dataset = random_split(dataset, [train_size, val_size, test_size], generator=generator)
+    train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], shuffle=True)
+    test_dataloader = DataLoader(test_dataset, batch_size=config['batch_size'], shuffle=True)
+
+    # Model, device, and loss
+    device = torch.device('cuda' if torch.cuda.is_available() else 'mps')
+    model = VisionTransformer(**config['model_config'])
+    criterion = nn.CrossEntropyLoss()
+
+    if args.log_wandb:
+        wandb.login()
+        wandb.init(**config['wandb_config'])
+
+    optimizer = set_optimizer(config['optimizer'], model, config['learning_rate'])
+    scheduler = set_scheduler(optimizer, config['scheduler'])
+
+    train(
+        model=model,
+        n_epochs=config['n_epochs'],
+        train_dataloader=train_dataloader,
+        val_dataloader=val_dataloader,
+        criterion=criterion,
+        optimizer=optimizer,
+        scheduler=scheduler,
+        device=device,
+        wandb=False,
+        checkpoint_interval=config['checkpoint_interval'],
+        accumulation_steps=config['accumulation_steps'],
+        grad_clip=config['grad_clip']
+    )
+
+    evaluate(
+        test_dataloader=test_dataloader,
+        model=model,
+        criterion=criterion,
+        device=device
+    )
+
+    # Finish wandb run
+    if args.log_wandb:
+        wandb.finish() 

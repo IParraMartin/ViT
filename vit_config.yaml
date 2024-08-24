@@ -1,9 +1,17 @@
 # MODEL CONFIG
+# Seed
+seed: 1337
+# Dataset
+audio_path: '/Users/inigoparra/Desktop/ESC-50-master-2/audio'
+annotations_path: '/Users/inigoparra/Desktop/ESC-50-master-2/meta/esc50.csv'
 # Data/Audio specifics
+n_samples: 22050
 sample_rate: 22050
 n_fft: 2048
 hop_length: 256
-n_mels: 256 # Controls the size
+n_mels: 256 # spec: n_mels x n_mels
+augment: True
+n_augment: 5
 
 # Train specifics
 batch_size: 16
@@ -13,6 +21,11 @@ test_split: 0.1
 n_epochs: 100
 optimizer: 'SGD'
 scheduler: 'step'
+accumulation_steps: 4
+grad_clip: False
+
+# Checkpoints
+checkpoint_interval: 10
 
 model_config: 
   img_size: 256
