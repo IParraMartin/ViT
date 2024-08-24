@@ -110,8 +110,6 @@ def train(
             if batch_idx % 10 == 0:
                 print(f'Epoch [{epoch+1}/{n_epochs}] - Step [{batch_idx+1}/{len(train_dataloader)}] - Loss: {loss.item():.3f}')
 
-            train_accuracy = (correct_train / total_train) * 100
-
             # Log metrics to wandb
             if wandb and global_step % log_interval == 0:
                 wandb.log({
@@ -120,7 +118,8 @@ def train(
                     'train_accuracy': train_accuracy,
                     'learning_rate': scheduler.get_last_lr()
                 })
-
+        
+        train_accuracy = (correct_train / total_train) * 100
         epoch_train_loss = running_train_loss / len(train_dataloader)
         # Print epoch metrics in the local console
         print(f'Epoch [{epoch+1}/{n_epochs}] - Train Loss: {epoch_train_loss:.3f} || Acc: {train_accuracy:.3f}')
@@ -145,6 +144,7 @@ def train(
                 running_val_loss += loss.item()
 
                 _, predicted = torch.max(outputs.data, 1)
+                # Count predictions per class to see if there's an imbalance
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
 
@@ -240,7 +240,7 @@ if __name__ == '__main__':
         sample_rate=sample_rate,
         n_fft=n_fft,
         hop_length=hop_length,
-        n_mels=n_mels # Can be 128 for more resolution
+        n_mels=n_mels
     )
 
     # Dataset
@@ -267,7 +267,8 @@ if __name__ == '__main__':
     # Model, device, and loss
     device = torch.device('cuda' if torch.cuda.is_available() else 'mps')
     model = VisionTransformer(**config['model_config'])
-    criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+    # Try weighting classes to see if it improves the model
+    criterion = nn.CrossEntropyLoss()
 
     if log_wandb:
         wandb.login()

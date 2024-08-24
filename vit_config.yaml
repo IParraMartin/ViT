@@ -3,9 +3,9 @@
 annotations_path: '/Users/inigoparra/Desktop/ESC-50-master-2/meta/esc50.csv'
 audio_dir: '/Users/inigoparra/Desktop/ESC-50-master-2/audio'
 sample_rate: 22050
-n_fft: 1024
+n_fft: 2048
 hop_length: 256
-n_mels: 128 # Controls the size
+n_mels: 256 # Controls the size
 
 # Train specifics
 batch_size: 12
@@ -13,19 +13,19 @@ learning_rate: 0.01
 validation_split: 0.2
 test_split: 0.1
 n_epochs: 100
-optimizer: 'Adam'
+optimizer: 'SGD'
 scheduler: 'step'
 
 model_config: 
-  img_size: 128
+  img_size: 256
   patch_size: 16
   in_channels: 1
-  num_classes: 25
-  d_model: 512
-  layers: 6
-  heads: 4
-  h_dim: 1024
-  dropout: 0.4
+  num_classes: 24
+  d_model: 768
+  layers: 12
+  heads: 12
+  h_dim: 2048
+  dropout: 0.2
 
 # Wandb logs specifics
 wandb_config:

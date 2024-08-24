@@ -2,12 +2,26 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import numpy as np
+import random
 
 from torch.utils.data import Dataset
 import torchaudio
 import torch
 
 from tools.augmentate import Augmentator
+
+
+
+# For reproducibility, set the seed for all random number generators
+# def set_seed(seed):
+#     torch.manual_seed(seed)
+#     torch.cuda.manual_seed_all(seed)
+#     torch.backends.cudnn.deterministic = True
+#     torch.backends.cudnn.benchmark = False
+#     np.random.seed(seed)
+#     random.seed(seed)
+
+# set_seed(42)
 
 
 class AudioData(Dataset):
@@ -156,6 +170,7 @@ class AudioData(Dataset):
         plt.figure()
         plt.imshow(signal.squeeze().numpy(), aspect='equal', cmap='inferno', origin='lower')
         plt.tight_layout()
+        plt.title(title)
         plt.show()
     
 
@@ -166,9 +181,9 @@ if __name__ == "__main__":
 
     mel_spectrogram = torchaudio.transforms.MelSpectrogram(
         sample_rate=sample_rate,
-        n_fft=1024,
+        n_fft=2048,
         hop_length=256,
-        n_mels=128 # Can be 128 for more resolution
+        n_mels=256 # Can be 128 for more resolution
     )
 
     usd = AudioData(
@@ -184,6 +199,6 @@ if __name__ == "__main__":
     assert str(torchaudio.list_audio_backends()) is not None, 'Try <pip install soundfile> or <pip3 install soundfile>'
 
     print(f'Total length of the dataset: {len(usd)}')
-    spectrogram, label = usd[29]
+    spectrogram, label = usd[15]
     print(f'Shape of squared spectrogram: {spectrogram.shape}')
     usd.plot_example(spectrogram, title=f"Label: {label}")
