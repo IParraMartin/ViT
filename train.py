@@ -62,7 +62,8 @@ def train(
         wandb: bool = False,
         checkpoint_dir: str = 'checkpoints',
         checkpoint_interval: int = 20,
-        accumulation_steps: int = 4
+        accumulation_steps: int = 4,
+        grad_clip: bool = False
     ):
     
     print(f"{'-'*50}\nDevice: {device}")
@@ -70,6 +71,7 @@ def train(
     print(f"Training...")
     
     model.to(device)
+
     if wandb:
         global_step = 0
         log_interval = 10
@@ -96,14 +98,16 @@ def train(
             outputs = model(signals)
             loss = criterion(outputs, labels)
             
-            # Normalize the loss
+            # Normalize the loss and BP
             loss = loss / accumulation_steps
-
             loss.backward()
+            
+            # Gradient clipping (if needed)
+            if grad_clip:
+                clip_grad_norm_(model.parameters(), max_norm=1.0)
 
-            # clip_grad_norm_(model.parameters(), max_norm=1.0)
+            # Update weights
             if ((batch_idx + 1) % accumulation_steps == 0) or (batch_idx + 1 == len(train_dataloader)):
-                # Update weights
                 optimizer.step()
                 optimizer.zero_grad()
 
@@ -116,7 +120,7 @@ def train(
             if wandb:
                 global_step += 1
 
-            # Print step metrics in the local console
+            # Print step metrics
             if batch_idx % 10 == 0:
                 print(f'Epoch [{epoch+1}/{n_epochs}] - Step [{batch_idx+1}/{len(train_dataloader)}] - Loss: {loss.item():.3f}')
 
@@ -131,7 +135,6 @@ def train(
         
         train_accuracy = (correct_train / total_train) * 100
         epoch_train_loss = running_train_loss / len(train_dataloader)
-        # Print epoch metrics in the local console
         print(f'Epoch [{epoch+1}/{n_epochs}] - Train Loss: {epoch_train_loss:.3f} || Acc: {train_accuracy:.3f}')
 
 

@@ -1,7 +1,5 @@
 # MODEL CONFIG
 # Data/Audio specifics
-annotations_path: '/Users/inigoparra/Desktop/ESC-50-master-2/meta/esc50.csv'
-audio_dir: '/Users/inigoparra/Desktop/ESC-50-master-2/audio'
 sample_rate: 22050
 n_fft: 2048
 hop_length: 256

@@ -23,7 +23,7 @@ def set_seed(seed):
     np.random.seed(seed)
     random.seed(seed)
 
-set_seed(42)
+set_seed(1337)
 
 # Set wandb to False if you don't want to log the training process
 log_wandb = False
@@ -33,12 +33,13 @@ with open('vit_config.yaml', 'r') as file:
     config = yaml.safe_load(file)
 
 # Paths (from config.py)
-annotations = config['annotations_path']
-audio_dir = config['audio_dir']
+annotations = '/Users/inigoparra/Desktop/ESC-50-master-2/meta/esc50.csv'
+audio_dir = '/Users/inigoparra/Desktop/ESC-50-master-2/audio'
+
 sample_rate = config['sample_rate']
 n_fft = config['n_fft']
-hop_length=config['hop_length']
-n_mels=config['n_mels']
+hop_length = config['hop_length']
+n_mels = config['n_mels']
 
 # Train parameters (from config.py)
 batch_size = config['batch_size']
@@ -103,7 +104,8 @@ train(
     wandb=False,
     checkpoint_dir='checkpoints',
     checkpoint_interval=10,
-    accumulation_steps=4
+    accumulation_steps=4,
+    grad_clip=False
 )
 
 evaluate(
