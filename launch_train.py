@@ -25,7 +25,6 @@ def set_seed(seed):
 
 set_seed(42)
 
-
 # Set wandb to False if you don't want to log the training process
 log_wandb = False
 
