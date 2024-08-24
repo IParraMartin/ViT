@@ -48,7 +48,7 @@ def train(
         optimizer: optim.Optimizer, 
         scheduler: optim.lr_scheduler, 
         device: torch.device, 
-        wandb: bool = False,
+        wandb_log: bool = False,
         checkpoint_interval: int = 20,
         accumulation_steps: int = 4,
         grad_clip: bool = False
@@ -60,7 +60,7 @@ def train(
     
     model.to(device)
 
-    if wandb:
+    if wandb_log:
         global_step = 0
         log_interval = 10
 
@@ -105,24 +105,25 @@ def train(
             total_train += labels.size(0)
             correct_train += (predicted == labels).sum().item()
 
-            if wandb:
+            if wandb_log:
                 global_step += 1
 
             # Print step metrics
             if batch_idx % 10 == 0:
                 print(f'Epoch [{epoch+1}/{n_epochs}] - Step [{batch_idx+1}/{len(train_dataloader)}] - Loss: {loss.item():.3f}')
-
-            # Log metrics to wandb
-            if wandb and global_step % log_interval == 0:
-                wandb.log({
-                    'step': global_step,
-                    'train_loss': loss.item(),
-                    'train_accuracy': train_accuracy,
-                    'learning_rate': scheduler.get_last_lr()
-                })
         
         train_accuracy = (correct_train / total_train) * 100
         epoch_train_loss = running_train_loss / len(train_dataloader)
+
+        # Log metrics to wandb
+        if wandb_log and global_step % log_interval == 0:
+            wandb.log({
+                'step': global_step,
+                'train_loss': loss.item(),
+                'train_accuracy': train_accuracy,
+                'learning_rate': scheduler.get_last_lr()
+            })
+        
         print(f'Epoch [{epoch+1}/{n_epochs}] - Train Loss: {epoch_train_loss:.3f} || Acc: {train_accuracy:.3f}')
 
 
@@ -157,7 +158,7 @@ def train(
             scheduler.step()
 
         #Log validation metrics to wandb
-        if wandb:
+        if wandb_log:
             wandb.log({
                 'step': global_step,
                 'val_loss': epoch_val_loss,
@@ -222,7 +223,9 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Train a Vision Transformer model on audio data')
     parser.add_argument('--config', type=str, default='vit_config.yaml', help='Path to the configuration file')
-    parser.add_argument('--log_wandb', type=bool, default=False, help='Log metrics to wandb')
+    parser.add_argument('--log_wandb', dest='log_wandb', action='store_true', help='Log metrics to wandb')
+    parser.add_argument('--no_log_wandb', dest='log_wandb', action='store_false', help='Do not log metrics to wandb')
+    parser.set_defaults(log_wandb=False)
     args = parser.parse_args()
 
     # Load configuration file
@@ -282,7 +285,7 @@ if __name__ == '__main__':
         optimizer=optimizer,
         scheduler=scheduler,
         device=device,
-        wandb=False,
+        wandb_log=args.log_wandb,
         checkpoint_interval=config['checkpoint_interval'],
         accumulation_steps=config['accumulation_steps'],
         grad_clip=config['grad_clip']
