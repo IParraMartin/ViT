@@ -6,7 +6,8 @@ from torchsummary import summary
 
 from seeding import Seeding
 import yaml
-    
+
+
 class PatchEmbeddingsConv(nn.Module):
 
     def __init__(self, img_size: int, patch_size: int = 7, in_channels: int = 1, d_model: int = 512):
@@ -84,7 +85,14 @@ class MLP(nn.Module):
 
 class EncoderBlock(nn.Module):
 
-    def __init__(self, d_model: int = 512, heads: int = 6, h_dim: int = 1024, dropout: float = 0.1, kv_bias: bool = False):
+    def __init__(
+            self, 
+            d_model: int = 512, 
+            heads: int = 6, 
+            h_dim: int = 1024, 
+            dropout: float = 0.1, 
+            kv_bias: bool = False
+    ):
         super().__init__()
         # Create two layer normalization layers
         self.norm1 = nn.LayerNorm(d_model, eps=1e-6)
@@ -159,9 +167,9 @@ if __name__ == '__main__':
 
     Seeding().seed_everything()
 
-    with open('config.yaml', 'r') as f:
+    with open('vit_config.yaml', 'r') as f:
         config = yaml.safe_load(f)
     
     model_config = config['config']
     model = VisionTransformer(**model_config)
-    summary(model, (3, 128, 128))
+    summary(model, (3, model_config['img_size'], model_config['img_size']))

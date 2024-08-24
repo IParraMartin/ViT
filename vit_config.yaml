@@ -1,12 +1,12 @@
 # MODEL CONFIG
 
 config: 
-  img_size: 128
+  img_size: 256
   patch_size: 16
   in_channels: 3
-  num_classes: 10
-  d_model: 512
+  num_classes: 25
+  d_model: 768
   layers: 12
-  heads: 8
-  h_dim: 2048
+  heads: 12
+  h_dim: 3072
   dropout: 0.2
