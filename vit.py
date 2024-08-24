@@ -6,6 +6,8 @@ from torchsummary import summary
 
 import yaml
 
+from initialize import init_weights
+
 
 class PatchEmbeddingsConv(nn.Module):
 
@@ -146,16 +148,10 @@ class VisionTransformer(nn.Module):
 
         self.norm = nn.LayerNorm(d_model, eps=1e-6)
         self.fc = nn.Linear(d_model, num_classes)
+        self.initialize_weights()
 
-        self.apply(self.init_weights)
-
-    def init_weights(self, module) -> None:
-        if isinstance(module, nn.Linear):
-            nn.init.normal_(module.weight, mean=0.0, std=0.02)
-            if module.bias is not None:
-                nn.init.zeros_(module.bias)
-        elif isinstance(module, nn.Embedding):
-            nn.init.normal_(module.weight, mean=0.0, std=0.02)
+    def initialize_weights(self) -> None:
+        init_weights(self)
     
     def forward(self, x):
         n_samples = x.shape[0] # Get the number of samples

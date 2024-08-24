@@ -33,5 +33,5 @@ if __name__ == '__main__':
         plt.plot(x.detach().numpy(), y, label=f'alpha={alpha}')
     plt.legend()
     plt.grid()
-    plt.title('Learnable Swish Activation Function')
+    plt.title('Learnable Activation Function')
     plt.show()
