@@ -4,7 +4,6 @@ import torch.nn as nn
 
 from torchsummary import summary
 
-from seeding import Seeding
 import yaml
 
 
@@ -81,6 +80,13 @@ class MLP(nn.Module):
         x = self.fc2(x)
         x = self.dropout(x)
         return x
+    
+    def initialize_weights(self):
+        nn.init.xavier_normal_(self.fc1.weight)
+        nn.init.xavier_normal_(self.fc2.weight)
+        nn.init.constant_(self.fc1.bias, 0)
+        nn.init.constant_(self.fc2.bias, 0)
+        print('FC weights initialized.')
     
 
 class EncoderBlock(nn.Module):
@@ -165,11 +171,9 @@ class VisionTransformer(nn.Module):
 
 if __name__ == '__main__':
 
-    Seeding().seed_everything()
-
     with open('vit_config.yaml', 'r') as f:
         config = yaml.safe_load(f)
     
-    model_config = config['config']
+    model_config = config['model_config']
     model = VisionTransformer(**model_config)
-    summary(model, (3, model_config['img_size'], model_config['img_size']))
+    summary(model, (1, model_config['img_size'], model_config['img_size']))
