@@ -26,6 +26,7 @@ model_config:
   heads: 12
   h_dim: 2048
   dropout: 0.2
+  norm_bias: False
 
 # Wandb logs specifics
 wandb_config:

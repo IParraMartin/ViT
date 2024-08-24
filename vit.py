@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
-
+from torch import optim
 from torchsummary import summary
 
 import yaml
@@ -80,14 +80,7 @@ class MLP(nn.Module):
         x = self.fc2(x)
         x = self.dropout(x)
         return x
-    
-    def initialize_weights(self):
-        nn.init.xavier_normal_(self.fc1.weight)
-        nn.init.xavier_normal_(self.fc2.weight)
-        nn.init.constant_(self.fc1.bias, 0)
-        nn.init.constant_(self.fc2.bias, 0)
-        print('FC weights initialized.')
-    
+
 
 class EncoderBlock(nn.Module):
 
@@ -97,12 +90,13 @@ class EncoderBlock(nn.Module):
             heads: int = 6, 
             h_dim: int = 1024, 
             dropout: float = 0.1, 
-            kv_bias: bool = False
+            kv_bias: bool = False,
+            norm_bias: bool = True  # True = GPT2 style; False = a bit better and faster
     ):
         super().__init__()
         # Create two layer normalization layers
-        self.norm1 = nn.LayerNorm(d_model, eps=1e-6)
-        self.norm2 = nn.LayerNorm(d_model, eps=1e-6)
+        self.norm1 = nn.LayerNorm(d_model, bias=norm_bias, eps=1e-5)
+        self.norm2 = nn.LayerNorm(d_model, bias=norm_bias, eps=1e-5)
         # Set the multi-head attention
         self.attn = Attention(d_model=d_model, heads=heads, dropout=dropout, kv_bias=kv_bias)
         # Set the MLP
@@ -127,7 +121,8 @@ class VisionTransformer(nn.Module):
             layers: int = 12, 
             heads: int = 8, 
             h_dim: int = 2048, 
-            dropout: float = 0.1
+            dropout: float = 0.1,
+            norm_bias: bool = False
         ):
         super().__init__()
         # Create the patches and embeddings
@@ -145,13 +140,23 @@ class VisionTransformer(nn.Module):
         
         # Create the transformer layers
         self.blocks = nn.ModuleList([
-            EncoderBlock(d_model=d_model, heads=heads, h_dim=h_dim, dropout=dropout)
+            EncoderBlock(d_model=d_model, heads=heads, h_dim=h_dim, dropout=dropout, norm_bias=norm_bias)
             for _ in range(layers)
         ])
 
         self.norm = nn.LayerNorm(d_model, eps=1e-6)
         self.fc = nn.Linear(d_model, num_classes)
 
+        self.apply(self.init_weights)
+
+    def init_weights(self, module) -> None:
+        if isinstance(module, nn.Linear):
+            nn.init.normal_(module.weight, mean=0.0, std=0.02)
+            if module.bias is not None:
+                nn.init.zeros_(module.bias)
+        elif isinstance(module, nn.Embedding):
+            nn.init.normal_(module.weight, mean=0.0, std=0.02)
+    
     def forward(self, x):
         n_samples = x.shape[0] # Get the number of samples
         x = self.patch_embed(x) # Get the patches
@@ -169,11 +174,47 @@ class VisionTransformer(nn.Module):
         return x
 
 
+
 if __name__ == '__main__':
+
+    def set_seed(seed):
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.cuda.manual_seed(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+    set_seed(1337)
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'mps')
 
     with open('vit_config.yaml', 'r') as f:
         config = yaml.safe_load(f)
     
     model_config = config['model_config']
     model = VisionTransformer(**model_config)
-    summary(model, (1, model_config['img_size'], model_config['img_size']))
+    fake_data = torch.randn(config['batch_size'], model_config['in_channels'], model_config['img_size'], model_config['img_size'])
+    fake_labels = torch.randint(0, model_config['num_classes'], (config['batch_size'],))
+
+    def send_to_device(data, labels, model, device):
+        return data.to(device), labels.to(device), model.to(device)
+    fake_data, fake_labels, model = send_to_device(fake_data, fake_labels, model, device)
+
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=0.0001)
+
+    # Debugging foward pass to check if the model is working
+    def debugging_pass(model, fake_input, fake_labels) -> None:
+        outputs = model(fake_input)
+        loss = criterion(outputs, fake_labels)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        _, predicted = torch.max(outputs, 1)
+        correct = (predicted == fake_labels).sum().item()
+        accuracy = correct / config['batch_size']
+        print(f"Loss: {loss.item():.3f}")
+        print(f"Accuracy: {accuracy * 100:.3f}%")
+        print(f"\nModel Parameters: {sum(p.numel() for p in model.parameters())}")
+
+    debugging_pass(model, fake_data, fake_labels)
