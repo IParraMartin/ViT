@@ -6,7 +6,7 @@ def set_scheduler(optimizer: optim.Optimizer, scheduler: str = 'plateau') -> opt
     if scheduler == 'step': # every x epochs (step_size) reduce lr multiplying it by y (gamma)
         return StepLR(
             optimizer,
-            step_size=50,
+            step_size=25,
             gamma=0.1
         )
     elif scheduler == 'plateau': # factor = Factor by which the learning rate will be reduced
