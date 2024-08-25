@@ -20,10 +20,10 @@ learning_rate: 0.01
 validation_split: 0.2
 test_split: 0.1
 n_epochs: 100
-optimizer: 'AdamW'
-scheduler: 'step'
+optimizer: 'SGD'
+scheduler: 'plateau'
 accumulation_steps: 4
-grad_clip: True
+grad_clip: False
 
 # Checkpoints
 checkpoint_interval: 20
