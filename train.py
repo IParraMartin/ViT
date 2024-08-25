@@ -82,7 +82,7 @@ def train(
             loss = criterion(outputs, labels)
             running_train_loss += loss.item()       # Get the actual loss to print
 
-            # Normalize the gradients for the accumulation steps
+            # Normalize the gradients for the accumulation steps (gives training stability)
             loss = loss / ACCUMULATION_STEPS
             loss.backward()
             
@@ -109,12 +109,12 @@ def train(
                 precision.update(outputs, labels)
                 recall.update(outputs, labels)
 
-            if (batch_idx + 1) % 10 == 0:
+            if (batch_idx + 1) % 10 == 0: # Maybe the same as ACCUMULATION_STEPS to match the gradient accumulation?
                 avg_loss = running_train_loss / (batch_idx + 1)
                 print(f'Epoch [{epoch+1}/{n_epochs}] - Step [{batch_idx+1}/{len(train_dataloader)}] - Loss: {avg_loss:.3f}')
         
         epoch_train_loss = running_train_loss / len(train_dataloader)
-        train_accuracy, train_f1_macro, train_f1_micro, precision, recall = train_accuracy.compute(), f1_macro.compute(), f1_micro.compute(), precision.compute(), recall.compute()
+        train_accuracy, train_f1_macro, train_f1_micro, train_precision, train_recall = train_accuracy.compute(), f1_macro.compute(), f1_micro.compute(), precision.compute(), recall.compute()
 
         if wandb_log:
             wandb.log({
@@ -123,12 +123,12 @@ def train(
                 'train_accuracy': train_accuracy.item(),
                 'train_f1_macro': train_f1_macro.item(),
                 'train_f1_micro': train_f1_micro.item(),
-                'train_precision': precision.item(),
-                'train_recall': recall.item()
+                'train_precision': train_precision.item(),
+                'train_recall': train_recall.item()
             })
         
         print(f'Epoch [{epoch+1}/{n_epochs}] - Train Loss: {epoch_train_loss:.3f} || Train Accuracy: {train_accuracy.item():.3f}')
-        print(f'Train F1-Macro: {train_f1_macro.item():.3f} || Train F1-Micro: {train_f1_micro.item():.3f} || Precision: {precision.item():.3f} || Recall: {recall.item():.3f}')
+        print(f'Train F1-Macro: {train_f1_macro.item():.3f} || Train F1-Micro: {train_f1_micro.item():.3f} || Precision: {train_precision.item():.3f} || Recall: {train_recall.item():.3f}')
 
 
         # Validation
@@ -154,6 +154,7 @@ def train(
                 val_recall.update(outputs, labels)
 
         epoch_val_loss = running_val_loss / len(val_dataloader)
+        val_accuracy, val_f1_macro, val_f1_micro, val_precision, val_recall = val_accuracy.compute(), val_f1_macro.compute(), val_f1_micro.compute(), val_precision.compute(), val_recall.compute()
 
         if scheduler is not None:
             scheduler.step(epoch_val_loss)
@@ -189,29 +190,36 @@ def train(
 def evaluate(model: nn.Module, test_dataloader: DataLoader, criterion: nn.Module, device: torch.device):
 
     print("Evaluating...")
+
     model.to(device)
     model.eval()
     test_loss = 0.0
-    correct = 0
-    total = 0
+    test_accuracy = MulticlassAccuracy(num_classes=50, average='micro').to(device)
+    test_f1_macro = MulticlassF1Score(num_classes=50, average='macro').to(device)
+    test_f1_micro = MulticlassF1Score(num_classes=50, average='micro').to(device)
+    test_precision = MulticlassPrecision(num_classes=50, average='micro').to(device)
+    test_recall = MulticlassRecall(num_classes=50, average='micro').to(device)
 
     with torch.no_grad():
         for signals, labels in test_dataloader:
             signals, labels = signals.to(device), labels.to(device)
-
             outputs = model(signals)
             loss = criterion(outputs, labels)
             test_loss += loss.item()
 
-            _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()
+            test_accuracy.update(outputs, labels)
+            test_f1_macro.update(outputs, labels)
+            test_f1_micro.update(outputs, labels)
+            test_precision.update(outputs, labels)
+            test_recall.update(outputs, labels)
 
     test_loss = test_loss / len(test_dataloader)
-    test_accuracy = (correct / total) * 100
+    test_accuracy, test_f1_macro, test_f1_micro, test_precision, test_recall = test_accuracy.compute(), test_f1_macro.compute(), test_f1_micro.compute(), test_precision.compute(), test_recall.compute()
     
     # Evaluation results
     print(f'Test Loss: {test_loss:.3f} || Test Accuracy: {test_accuracy:.3f}')
+    print(f'Test F1-Macro: {test_f1_macro.item():.3f} || Test F1-Micro: {test_f1_micro.item():.3f} || Test Precision: {test_precision.item():.3f} || Test Recall: {test_recall.item():.3f}')
+
     print("Evaluation complete.")
 
 
