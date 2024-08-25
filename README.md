@@ -16,5 +16,5 @@ cd Desktop/ViT
 ```
 3 - Run the following command:
 ```
-python3 train.py --configs/vit_config_mini.yaml --no_log_wandb
+python3 train.py --config configs/vit_config_mini.yaml --no_log_wandb
 ```
