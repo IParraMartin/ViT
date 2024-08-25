@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 from torch.nn.utils import clip_grad_norm_
-from torchmetrics.classification import MulticlassAccuracy, MulticlassAveragePrecision, MulticlassF1Score, MulticlassRecall
+from torchmetrics.classification import MulticlassAccuracy, MulticlassPrecision, MulticlassF1Score, MulticlassRecall
 
 import numpy as np
 import random
@@ -48,7 +48,7 @@ def train(
         device: torch.device, 
         wandb_log: bool = False,
         checkpoint_interval: int = 20,
-        accumulation_steps: int = 4,
+        ACCUMULATION_STEPS: int = 4,
         grad_clip: bool = False
     ):
     
@@ -63,7 +63,6 @@ def train(
         log_interval = 10
 
     os.makedirs('checkpoints', exist_ok=True)
-
     best_val_loss = float('inf')
 
     # Training
@@ -74,22 +73,24 @@ def train(
         train_accuracy = MulticlassAccuracy(num_classes=50, average='micro').to(device)
         f1_macro = MulticlassF1Score(num_classes=50, average='macro').to(device)
         f1_micro = MulticlassF1Score(num_classes=50, average='micro').to(device)
-        precision = MulticlassAveragePrecision(num_classes=50, average='macro').to(device)
-        recall = MulticlassRecall(num_classes=50, average='macro').to(device)
+        precision = MulticlassPrecision(num_classes=50, average='micro').to(device)
+        recall = MulticlassRecall(num_classes=50, average='micro').to(device)
 
         for batch_idx, (signals, labels) in enumerate(train_dataloader):
             signals, labels = signals.to(device), labels.to(device)
             outputs = model(signals)
             loss = criterion(outputs, labels)
             running_train_loss += loss.item()       # Get the actual loss to print
-            loss = loss / accumulation_steps        # Normalize the loss for the accumulation steps
+
+            # Normalize the gradients for the accumulation steps
+            loss = loss / ACCUMULATION_STEPS
             loss.backward()
             
             if grad_clip:
                 clip_grad_norm_(model.parameters(), max_norm=1.0)
 
             # Update weights
-            if ((batch_idx + 1) % accumulation_steps == 0) or (batch_idx + 1 == len(train_dataloader)):
+            if ((batch_idx + 1) % ACCUMULATION_STEPS == 0) or (batch_idx + 1 == len(train_dataloader)):
                 optimizer.step()
                 optimizer.zero_grad()
 
@@ -136,8 +137,8 @@ def train(
         val_accuracy = MulticlassAccuracy(num_classes=50, average='micro').to(device)
         val_f1_macro = MulticlassF1Score(num_classes=50, average='macro').to(device)
         val_f1_micro = MulticlassF1Score(num_classes=50, average='micro').to(device)
-        val_precision = MulticlassAveragePrecision(num_classes=50, average='macro').to(device)
-        val_recall = MulticlassRecall(num_classes=50, average='macro').to(device)
+        val_precision = MulticlassPrecision(num_classes=50, average='micro').to(device)
+        val_recall = MulticlassRecall(num_classes=50, average='micro').to(device)
 
         with torch.no_grad():
             for signals, labels in val_dataloader:
@@ -295,7 +296,7 @@ if __name__ == '__main__':
         device=device,
         wandb_log=args.log_wandb,
         checkpoint_interval=config['checkpoint_interval'],
-        accumulation_steps=config['accumulation_steps'],
+        ACCUMULATION_STEPS=config['accumulation_steps'],
         grad_clip=config['grad_clip']
     )
 
