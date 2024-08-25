@@ -23,7 +23,6 @@ TO DO:
     - More work on setting optimal parameters for the MelSpectrogram
     - Explore other transformations that capture the target features better
     - Try different number of samples
-    - Analyze the performance with different h_dim values
     - Analyze the performance with different non-linearities
     - Try weighting classes (CELoss) to see if it improves the model
 """
