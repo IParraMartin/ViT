@@ -73,19 +73,14 @@ def train(
         running_train_loss = 0.0
         correct_train = 0
         total_train = 0
-
-        accumulation_steps = accumulation_steps
-
         for batch_idx, (signals, labels) in enumerate(train_dataloader):
             signals, labels = signals.to(device), labels.to(device)
-            
-            # expected signals shape should be [batch_size, channels, height, width]
-            if len(signals.shape) != 4:
-                signals = signals.unsqueeze(1)
             
             outputs = model(signals)
             loss = criterion(outputs, labels)
             
+            running_train_loss += loss.item()
+
             # Normalize the loss and BP
             loss = loss / accumulation_steps
             loss.backward()
@@ -99,29 +94,28 @@ def train(
                 optimizer.step()
                 optimizer.zero_grad()
 
-            running_train_loss += loss.item()
+                if wandb_log:
+                    global_step += 1
 
             _, predicted = torch.max(outputs.data, 1)
             total_train += labels.size(0)
             correct_train += (predicted == labels).sum().item()
 
-            if wandb_log:
-                global_step += 1
-
             # Print step metrics
-            if batch_idx % 10 == 0:
-                print(f'Epoch [{epoch+1}/{n_epochs}] - Step [{batch_idx+1}/{len(train_dataloader)}] - Loss: {loss.item():.3f}')
+            if (batch_idx + 1) % 10 == 0:
+                avg_loss = running_train_loss / (batch_idx + 1)
+                print(f'Epoch [{epoch+1}/{n_epochs}] - Step [{batch_idx+1}/{len(train_dataloader)}] - Loss: {avg_loss:.3f}')
         
-        train_accuracy = (correct_train / total_train) * 100
         epoch_train_loss = running_train_loss / len(train_dataloader)
+        train_accuracy = (correct_train / total_train) * 100
 
         # Log metrics to wandb
         if wandb_log and global_step % log_interval == 0:
             wandb.log({
                 'step': global_step,
-                'train_loss': loss.item(),
+                'train_loss': loss.item() * accumulation_steps,
                 'train_accuracy': train_accuracy,
-                'learning_rate': scheduler.get_last_lr()
+                'learning_rate': scheduler.get_last_lr()[0]
             })
         
         print(f'Epoch [{epoch+1}/{n_epochs}] - Train Loss: {epoch_train_loss:.3f} || Acc: {train_accuracy:.3f}')
@@ -135,11 +129,6 @@ def train(
         with torch.no_grad():
             for signals, labels in val_dataloader:
                 signals, labels = signals.to(device), labels.to(device)
-                
-                if len(signals.shape) == 4:
-                    signals = signals.squeeze(1)
-                
-                signals = signals.unsqueeze(1)
                 
                 outputs = model(signals)
                 loss = criterion(outputs, labels)
@@ -166,7 +155,7 @@ def train(
             })
 
         # Print LR and summary
-        print(f'Learning rate: {scheduler.get_last_lr()}')
+        print(f'Learning rate: {scheduler.get_last_lr()[0]}')
         print(f'Epoch [{epoch+1}/{n_epochs}] - Train Loss: {epoch_train_loss:.3f} - Val Loss: {epoch_val_loss:.3f} || Val Accuracy: {val_accuracy:.3f}')
 
         # Save checkpoint every x epochs
@@ -222,7 +211,7 @@ if __name__ == '__main__':
         random.seed(seed)
 
     parser = argparse.ArgumentParser(description='Train a Vision Transformer model on audio data')
-    parser.add_argument('--config', type=str, default='vit_config.yaml', help='Path to the configuration file')
+    parser.add_argument('--config', type=str, default='vit_config_small.yaml', help='Path to the configuration file')
     parser.add_argument('--log_wandb', dest='log_wandb', action='store_true', help='Log metrics to wandb')
     parser.add_argument('--no_log_wandb', dest='log_wandb', action='store_false', help='Do not log metrics to wandb')
     parser.set_defaults(log_wandb=False)
@@ -267,6 +256,7 @@ if __name__ == '__main__':
     # Model, device, and loss
     device = torch.device('cuda' if torch.cuda.is_available() else 'mps')
     model = VisionTransformer(**config['model_config'])
+    print(f'Model trainable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}')
     criterion = nn.CrossEntropyLoss()
 
     if args.log_wandb:

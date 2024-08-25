@@ -1,0 +1,59 @@
+# MODEL CONFIG
+# Seed
+seed: 1337
+
+# Dataset
+audio_path: /Users/inigoparra/Desktop/ESC-50-master/audio
+annotations_path: /Users/inigoparra/Desktop/ESC-50-master/meta/esc50.csv
+# Data/Audio specifics
+n_samples: 22050
+sample_rate: 22050
+n_fft: 2048
+hop_length: 256
+n_mels: 256 # spectrogram: n_mels x n_mels
+augment: True
+n_augment: 5
+
+# Train specifics
+batch_size: 12
+learning_rate: 0.001
+validation_split: 0.2
+test_split: 0.1
+n_epochs: 100
+optimizer: 'SGD'
+scheduler: 'step'
+accumulation_steps: 4
+grad_clip: False
+
+# Checkpoints
+checkpoint_interval: 20
+
+model_config: 
+  img_size: 256
+  patch_size: 16
+  in_channels: 1
+  num_classes: 50
+  d_model: 768
+  layers: 12
+  heads: 12
+  h_dim: 2048
+  dropout: 0.2
+  norm_bias: False
+
+# Wandb logs specifics
+wandb_config:
+  project: 'ViT-base'
+  config:
+    epochs: 100
+    batch_size: 12
+    learning_rate: 0.01
+    optimizer: 'SGD'
+    img_size: 256
+    patch_size: 16
+    in_channels: 1
+    num_classes: 50
+    d_model: 768
+    layers: 12
+    heads: 12
+    h_dim: 2048
+    dropout: 0.2

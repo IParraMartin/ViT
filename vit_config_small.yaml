@@ -16,17 +16,17 @@ n_augment: 5
 
 # Train specifics
 batch_size: 12
-learning_rate: 0.001
+learning_rate: 0.01
 validation_split: 0.2
 test_split: 0.1
 n_epochs: 100
-optimizer: 'SGD'
+optimizer: 'AdamW'
 scheduler: 'step'
 accumulation_steps: 4
-grad_clip: False
+grad_clip: True
 
 # Checkpoints
-checkpoint_interval: 10
+checkpoint_interval: 20
 
 model_config: 
   img_size: 256
@@ -36,7 +36,7 @@ model_config:
   d_model: 512
   layers: 6
   heads: 8
-  h_dim: 2048
+  h_dim: 1024
   dropout: 0.2
   norm_bias: False
 
@@ -54,6 +54,6 @@ wandb_config:
     num_classes: 50
     d_model: 512
     layers: 6
-    heads: 12
-    h_dim: 2048
+    heads: 8
+    h_dim: 1024
     dropout: 0.2
