@@ -34,11 +34,11 @@ model_config:
   patch_size: 16
   in_channels: 1
   num_classes: 50
-  d_model: 512
+  d_model: 1024
   layers: 6
-  heads: 8
-  h_dim: 2048
-  dropout: 0.1
+  heads: 16
+  h_dim: 4096
+  dropout: 0.3
   norm_bias: False
 
 # Wandb logs specifics
@@ -53,8 +53,8 @@ wandb_config:
     patch_size: 16
     in_channels: 1
     num_classes: 50
-    d_model: 512
+    d_model: 1024
     layers: 6
-    heads: 8
-    h_dim: 1024
+    heads: 16
+    h_dim: 4096
     dropout: 0.2
