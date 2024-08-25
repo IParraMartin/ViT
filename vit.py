@@ -126,27 +126,23 @@ class VisionTransformer(nn.Module):
             norm_bias: bool = False
         ):
         super().__init__()
+        # We store d_model as an attribute to be able to initialize the CLS and positional embeddings
+        self.d_model = d_model
         # Create the patches and embeddings
-        self.patch_embed = PatchEmbeddingsConv(
-            img_size=img_size,
-            patch_size=patch_size,
-            in_channels=in_channels, 
-            d_model=d_model
-        )
-        # Create the class token (learnable parameter)
+        self.patch_embed = PatchEmbeddingsConv(img_size=img_size, patch_size=patch_size, in_channels=in_channels, d_model=d_model)
+        # Create the CLS token and position embeddings (learnable parameters)
         self.cls_token = nn.Parameter(torch.randn(1, 1, d_model))
-        # Create the position embeddings
         self.pos_embedding = nn.Parameter(torch.zeros(1, 1 + self.patch_embed.n_patches, d_model))
-        self.dropout = nn.Dropout(dropout)
-        
         # Create the transformer layers
         self.blocks = nn.ModuleList([
             EncoderBlock(d_model=d_model, heads=heads, h_dim=h_dim, dropout=dropout, norm_bias=norm_bias)
             for _ in range(layers)
         ])
-
+        # Others
         self.norm = nn.LayerNorm(d_model, eps=1e-6)
         self.fc = nn.Linear(d_model, num_classes)
+        self.dropout = nn.Dropout(dropout)
+
         self.initialize_weights()
 
     def initialize_weights(self) -> None:
@@ -183,7 +179,7 @@ if __name__ == '__main__':
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'mps')
 
-    with open('vit_config.yaml', 'r') as f:
+    with open('vit_config_small.yaml', 'r') as f:
         config = yaml.safe_load(f)
     
     model_config = config['model_config']

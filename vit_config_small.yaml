@@ -15,8 +15,8 @@ augment: True
 n_augment: 5
 
 # Train specifics
-batch_size: 12
-learning_rate: 0.01
+batch_size: 16
+learning_rate: 0.001
 validation_split: 0.2
 test_split: 0.1
 n_epochs: 100
@@ -36,8 +36,8 @@ model_config:
   d_model: 512
   layers: 6
   heads: 8
-  h_dim: 1024
-  dropout: 0.2
+  h_dim: 2048
+  dropout: 0.1
   norm_bias: False
 
 # Wandb logs specifics
