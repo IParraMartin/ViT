@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 from torch.nn.utils import clip_grad_norm_
+from torchmetrics.classification import MulticlassAccuracy, MulticlassAveragePrecision, MulticlassF1Score, MulticlassRecall
 
 import numpy as np
 import random
@@ -73,6 +74,10 @@ def train(
         running_train_loss = 0.0
         correct_train = 0
         total_train = 0
+        f1_macro = MulticlassF1Score(num_classes=50, average='macro').to(device)
+        f1_micro = MulticlassF1Score(num_classes=50, average='micro').to(device)
+        precission = MulticlassAveragePrecision(num_classes=50, average='macro').to(device)
+        recall = MulticlassRecall(num_classes=50, average='macro').to(device)
 
         for batch_idx, (signals, labels) in enumerate(train_dataloader):
             signals, labels = signals.to(device), labels.to(device)
@@ -104,21 +109,32 @@ def train(
                 total_train += labels.size(0)
                 correct_train += (predicted == labels).sum().item()
 
+                f1_macro.update(outputs, labels)
+                f1_micro.update(outputs, labels)
+                precission.update(outputs, labels)
+                recall.update(outputs, labels)
+
             if (batch_idx + 1) % 10 == 0:
                 avg_loss = running_train_loss / (batch_idx + 1)
                 print(f'Epoch [{epoch+1}/{n_epochs}] - Step [{batch_idx+1}/{len(train_dataloader)}] - Loss: {avg_loss:.3f}')
         
         epoch_train_loss = running_train_loss / len(train_dataloader)
         train_accuracy = (correct_train / total_train) * 100
+        train_f1_macro, train_f1_micro, precission, recall = f1_macro.compute(), f1_micro.compute(), precission.compute(), recall.compute()
 
         if wandb_log:
             wandb.log({
                 'epoch': epoch + 1,
                 'train_loss': epoch_train_loss,
-                'train_accuracy': train_accuracy
+                'train_accuracy': train_accuracy,
+                'Train F1-Macro': train_f1_macro.item(),
+                'Train F1-Micro': train_f1_micro.item(),
+                'Train Precission': precission.item(),
+                'Train Recall': recall.item()
             })
         
         print(f'Epoch [{epoch+1}/{n_epochs}] - Train Loss: {epoch_train_loss:.3f} || Train Accuracy: {train_accuracy:.3f}')
+        print(f'Train F1-Macro: {train_f1_macro.item():.3f} || Train F1-Micro: {train_f1_micro.item():.3f} || Precission: {precission.item():.3f} || Recall: {recall.item():.3f}')
 
 
         # Validation
