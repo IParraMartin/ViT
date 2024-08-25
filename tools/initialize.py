@@ -27,7 +27,7 @@ def init_weights(model: nn.Module) -> None:
                 print("Convolutional weights initialized")
                 flag_convolutional = True
 
-    # Handle nn.Parameter for cls_token and pos_embedding separately
+    # Initializing the CLS and Positional Embeddings is less trivial:
     for name, param in model.named_parameters():
 
         if "cls_token" in name and param.shape == (1, 1, model.d_model):
