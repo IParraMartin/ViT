@@ -28,7 +28,6 @@ TO DO:
     - Try weighting classes (CELoss) to see if it improves the model
 """
 
-
 def save_checkpoint(model, optimizer, scheduler, epoch, path):
     torch.save({
         'epoch': epoch,
@@ -72,11 +71,10 @@ def train(
 
         model.train()
         running_train_loss = 0.0
-        correct_train = 0
-        total_train = 0
+        train_accuracy = MulticlassAccuracy(num_classes=50, average='micro').to(device)
         f1_macro = MulticlassF1Score(num_classes=50, average='macro').to(device)
         f1_micro = MulticlassF1Score(num_classes=50, average='micro').to(device)
-        precission = MulticlassAveragePrecision(num_classes=50, average='macro').to(device)
+        precision = MulticlassAveragePrecision(num_classes=50, average='macro').to(device)
         recall = MulticlassRecall(num_classes=50, average='macro').to(device)
 
         for batch_idx, (signals, labels) in enumerate(train_dataloader):
@@ -101,17 +99,13 @@ def train(
                         wandb.log({
                             'step': global_step,
                             'train_loss': running_train_loss / (batch_idx + 1),
-                            'learning_rate': scheduler.get_last_lr()[0],
-                            'training_accuracy': (correct_train / total_train) * 100
+                            'learning_rate': scheduler.get_last_lr()[0]
                         }) 
 
-                _, predicted = torch.max(outputs.data, 1)
-                total_train += labels.size(0)
-                correct_train += (predicted == labels).sum().item()
-
+                train_accuracy.update(outputs, labels)
                 f1_macro.update(outputs, labels)
                 f1_micro.update(outputs, labels)
-                precission.update(outputs, labels)
+                precision.update(outputs, labels)
                 recall.update(outputs, labels)
 
             if (batch_idx + 1) % 10 == 0:
@@ -119,29 +113,31 @@ def train(
                 print(f'Epoch [{epoch+1}/{n_epochs}] - Step [{batch_idx+1}/{len(train_dataloader)}] - Loss: {avg_loss:.3f}')
         
         epoch_train_loss = running_train_loss / len(train_dataloader)
-        train_accuracy = (correct_train / total_train) * 100
-        train_f1_macro, train_f1_micro, precission, recall = f1_macro.compute(), f1_micro.compute(), precission.compute(), recall.compute()
+        train_accuracy, train_f1_macro, train_f1_micro, precision, recall = train_accuracy.compute(), f1_macro.compute(), f1_micro.compute(), precision.compute(), recall.compute()
 
         if wandb_log:
             wandb.log({
                 'epoch': epoch + 1,
                 'train_loss': epoch_train_loss,
-                'train_accuracy': train_accuracy,
-                'Train F1-Macro': train_f1_macro.item(),
-                'Train F1-Micro': train_f1_micro.item(),
-                'Train Precission': precission.item(),
-                'Train Recall': recall.item()
+                'train_accuracy': train_accuracy.item(),
+                'train_f1_macro': train_f1_macro.item(),
+                'train_f1_micro': train_f1_micro.item(),
+                'train_precision': precision.item(),
+                'train_recall': recall.item()
             })
         
-        print(f'Epoch [{epoch+1}/{n_epochs}] - Train Loss: {epoch_train_loss:.3f} || Train Accuracy: {train_accuracy:.3f}')
-        print(f'Train F1-Macro: {train_f1_macro.item():.3f} || Train F1-Micro: {train_f1_micro.item():.3f} || Precission: {precission.item():.3f} || Recall: {recall.item():.3f}')
+        print(f'Epoch [{epoch+1}/{n_epochs}] - Train Loss: {epoch_train_loss:.3f} || Train Accuracy: {train_accuracy.item():.3f}')
+        print(f'Train F1-Macro: {train_f1_macro.item():.3f} || Train F1-Micro: {train_f1_micro.item():.3f} || Precision: {precision.item():.3f} || Recall: {recall.item():.3f}')
 
 
         # Validation
         model.eval()
         running_val_loss = 0.0
-        correct = 0
-        total = 0
+        val_accuracy = MulticlassAccuracy(num_classes=50, average='micro').to(device)
+        val_f1_macro = MulticlassF1Score(num_classes=50, average='macro').to(device)
+        val_f1_micro = MulticlassF1Score(num_classes=50, average='micro').to(device)
+        val_precision = MulticlassAveragePrecision(num_classes=50, average='macro').to(device)
+        val_recall = MulticlassRecall(num_classes=50, average='macro').to(device)
 
         with torch.no_grad():
             for signals, labels in val_dataloader:
@@ -150,12 +146,13 @@ def train(
                 loss = criterion(outputs, labels)
                 running_val_loss += loss.item()
 
-                _, predicted = torch.max(outputs.data, 1)
-                total += labels.size(0)
-                correct += (predicted == labels).sum().item()
+                val_accuracy.update(outputs, labels)
+                val_f1_macro.update(outputs, labels)
+                val_f1_micro.update(outputs, labels)
+                val_precision.update(outputs, labels)
+                val_recall.update(outputs, labels)
 
         epoch_val_loss = running_val_loss / len(val_dataloader)
-        val_accuracy = (correct / total) * 100
 
         if scheduler is not None:
             scheduler.step(epoch_val_loss)
@@ -168,11 +165,17 @@ def train(
             wandb.log({
                 'epoch': epoch + 1,
                 'val_loss': epoch_val_loss,
-                'val_accuracy': val_accuracy
+                'val_accuracy': val_accuracy.item(),
+                'val_f1_macro': val_f1_macro.item(),
+                'val_f1_micro': val_f1_micro.item(),
+                'val_precision': val_precision.item(),
+                'val_recall': val_recall.item()
             })
 
         print(f'Learning rate: {scheduler.get_last_lr()[0]}')
-        print(f'Epoch [{epoch+1}/{n_epochs}] - Train Loss: {epoch_train_loss:.3f} - Val Loss: {epoch_val_loss:.3f} || Val Accuracy: {val_accuracy:.3f}')
+        print(f'Epoch [{epoch+1}/{n_epochs}] - Train Loss: {epoch_train_loss:.3f} - Val Loss: {epoch_val_loss:.3f} || Val Accuracy: {val_accuracy.item():.3f}')
+        print(f'Val F1-Macro: {val_f1_macro.item():.3f} || Val F1-Micro: {val_f1_micro.item():.3f} || Val Precision: {val_precision.item():.3f} || Val Recall: {val_recall.item():.3f}')
+
 
         if epoch % checkpoint_interval == 0 and epoch != 0:
             checkpoint_path = os.path.join('checkpoints', f'checkpoint_{epoch+1}.pt')
