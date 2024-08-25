@@ -235,7 +235,7 @@ if __name__ == '__main__':
         random.seed(seed)
 
     parser = argparse.ArgumentParser(description='Train a Vision Transformer model on audio data')
-    parser.add_argument('--config', type=str, default='configs/vit_config_small.yaml', help='Path to the configuration file')
+    parser.add_argument('--config', type=str, default='configs/vit_base.yaml', help='Path to the configuration file')
     parser.add_argument('--log_wandb', dest='log_wandb', action='store_true', help='Log metrics to wandb')
     parser.add_argument('--no_log_wandb', dest='log_wandb', action='store_false', help='Do not log metrics to wandb')
     parser.set_defaults(log_wandb=False)

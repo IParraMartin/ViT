@@ -179,7 +179,7 @@ if __name__ == '__main__':
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'mps')
 
-    with open('vit_config_small.yaml', 'r') as f:
+    with open('configs/vit_base.yaml', 'r') as f:
         config = yaml.safe_load(f)
     
     model_config = config['model_config']
