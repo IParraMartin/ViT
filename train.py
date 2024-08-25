@@ -207,7 +207,7 @@ if __name__ == '__main__':
         random.seed(seed)
 
     parser = argparse.ArgumentParser(description='Train a Vision Transformer model on audio data')
-    parser.add_argument('--config', type=str, default='vit_config_small.yaml', help='Path to the configuration file')
+    parser.add_argument('--config', type=str, default='configs/vit_config_small.yaml', help='Path to the configuration file')
     parser.add_argument('--log_wandb', dest='log_wandb', action='store_true', help='Log metrics to wandb')
     parser.add_argument('--no_log_wandb', dest='log_wandb', action='store_false', help='Do not log metrics to wandb')
     parser.set_defaults(log_wandb=False)
@@ -250,9 +250,12 @@ if __name__ == '__main__':
     test_dataloader = DataLoader(test_dataset, batch_size=config['batch_size'], shuffle=False)
 
     # Model, device, and loss
-    device = torch.device('cuda' if torch.cuda.is_available() else 'mps')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
     model = VisionTransformer(**config['model_config'])
-    print(f'Model trainable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad)}')
+
+    n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f'Trainable parameters: {n_params / 1e6:.2f}M')
+
     criterion = nn.CrossEntropyLoss()
 
     if args.log_wandb:
