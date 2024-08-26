@@ -2,6 +2,7 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR, ReduceLROnPlateau, CosineAnnealingLR, SequentialLR, ConstantLR, LinearLR
 from transformers import get_scheduler
 
+# MAKE LINEAR WITH WARMUP
 
 def set_scheduler(optimizer: optim.Optimizer, scheduler: str = 'plateau') -> optim.lr_scheduler:
 
