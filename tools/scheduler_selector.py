@@ -1,6 +1,8 @@
 import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR, ReduceLROnPlateau, CosineAnnealingLR, SequentialLR, ConstantLR
 
+
+
 def set_scheduler(optimizer: optim.Optimizer, scheduler: str = 'plateau') -> optim.lr_scheduler:
     assert scheduler in ['step', 'plateau', 'cosine', 'sequential', None], 'Invalid scheduler. Choose between step, plateau, cosine, or sequential'
     if scheduler == 'step': # every x epochs (step_size) reduce lr multiplying it by y (gamma)

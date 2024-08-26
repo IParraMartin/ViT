@@ -41,7 +41,8 @@ def train(
         n_epochs: int, 
         model: nn.Module, 
         train_dataloader: DataLoader, 
-        val_dataloader: DataLoader, 
+        val_dataloader: DataLoader,
+        num_classes: int,
         criterion: nn.Module, 
         optimizer: optim.Optimizer, 
         scheduler: optim.lr_scheduler, 
@@ -70,11 +71,11 @@ def train(
 
         model.train()
         running_train_loss = 0.0
-        train_accuracy = MulticlassAccuracy(num_classes=50, average='micro').to(device)
-        f1_macro = MulticlassF1Score(num_classes=50, average='macro').to(device)
-        f1_micro = MulticlassF1Score(num_classes=50, average='micro').to(device)
-        precision = MulticlassPrecision(num_classes=50, average='micro').to(device)
-        recall = MulticlassRecall(num_classes=50, average='micro').to(device)
+        train_accuracy = MulticlassAccuracy(num_classes=num_classes, average='micro').to(device)
+        f1_macro = MulticlassF1Score(num_classes=num_classes, average='macro').to(device)
+        f1_micro = MulticlassF1Score(num_classes=num_classes, average='micro').to(device)
+        precision = MulticlassPrecision(num_classes=num_classes, average='micro').to(device)
+        recall = MulticlassRecall(num_classes=num_classes, average='micro').to(device)
 
         for batch_idx, (signals, labels) in enumerate(train_dataloader):
             signals, labels = signals.to(device), labels.to(device)
@@ -134,11 +135,11 @@ def train(
         # Validation
         model.eval()
         running_val_loss = 0.0
-        val_accuracy = MulticlassAccuracy(num_classes=50, average='micro').to(device)
-        val_f1_macro = MulticlassF1Score(num_classes=50, average='macro').to(device)
-        val_f1_micro = MulticlassF1Score(num_classes=50, average='micro').to(device)
-        val_precision = MulticlassPrecision(num_classes=50, average='micro').to(device)
-        val_recall = MulticlassRecall(num_classes=50, average='micro').to(device)
+        val_accuracy = MulticlassAccuracy(num_classes=num_classes, average='micro').to(device)
+        val_f1_macro = MulticlassF1Score(num_classes=num_classes, average='macro').to(device)
+        val_f1_micro = MulticlassF1Score(num_classes=num_classes, average='micro').to(device)
+        val_precision = MulticlassPrecision(num_classes=num_classes, average='micro').to(device)
+        val_recall = MulticlassRecall(num_classes=num_classes, average='micro').to(device)
 
         with torch.no_grad():
             for signals, labels in val_dataloader:
@@ -187,18 +188,18 @@ def train(
 
 
 # EVALUATION IN TEST SET
-def evaluate(model: nn.Module, test_dataloader: DataLoader, criterion: nn.Module, device: torch.device):
+def evaluate(model: nn.Module, test_dataloader: DataLoader, num_classes: int, criterion: nn.Module, device: torch.device):
 
     print("Evaluating...")
 
     model.to(device)
     model.eval()
     test_loss = 0.0
-    test_accuracy = MulticlassAccuracy(num_classes=50, average='micro').to(device)
-    test_f1_macro = MulticlassF1Score(num_classes=50, average='macro').to(device)
-    test_f1_micro = MulticlassF1Score(num_classes=50, average='micro').to(device)
-    test_precision = MulticlassPrecision(num_classes=50, average='micro').to(device)
-    test_recall = MulticlassRecall(num_classes=50, average='micro').to(device)
+    test_accuracy = MulticlassAccuracy(num_classes=num_classes, average='micro').to(device)
+    test_f1_macro = MulticlassF1Score(num_classes=num_classes, average='macro').to(device)
+    test_f1_micro = MulticlassF1Score(num_classes=num_classes, average='micro').to(device)
+    test_precision = MulticlassPrecision(num_classes=num_classes, average='micro').to(device)
+    test_recall = MulticlassRecall(num_classes=num_classes, average='micro').to(device)
 
     with torch.no_grad():
         for signals, labels in test_dataloader:
@@ -283,6 +284,7 @@ if __name__ == '__main__':
 
     n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f'Trainable parameters: {n_params / 1e6:.2f}M')
+    print(f'Number of classes: {config['num_classes']}')
 
     criterion = nn.CrossEntropyLoss()
 
@@ -298,6 +300,7 @@ if __name__ == '__main__':
         n_epochs=config['n_epochs'],
         train_dataloader=train_dataloader,
         val_dataloader=val_dataloader,
+        num_classes=config['num_classes'],
         criterion=criterion,
         optimizer=optimizer,
         scheduler=scheduler,
@@ -311,6 +314,7 @@ if __name__ == '__main__':
     evaluate(
         test_dataloader=test_dataloader,
         model=model,
+        num_classes=config['num_classes'],
         criterion=criterion,
         device=device
     )

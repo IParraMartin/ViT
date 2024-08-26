@@ -7,6 +7,7 @@ audio_path: /Users/inigoparra/Desktop/ESC-50-master/audio
 annotations_path: /Users/inigoparra/Desktop/ESC-50-master/meta/esc50.csv
 
 # Data/Audio specifics
+num_classes: 50
 n_samples: 22050
 sample_rate: 22050
 n_fft: 2048

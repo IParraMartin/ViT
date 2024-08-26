@@ -2,27 +2,16 @@
 # Seed
 seed: 1337
 
-# Dataset
-audio_path: /Users/inigoparra/Desktop/ESC-50-master/audio
-annotations_path: /Users/inigoparra/Desktop/ESC-50-master/meta/esc50.csv
-
 # Data/Audio specifics
-num_classes: 50
-n_samples: 22050
-sample_rate: 22050
-n_fft: 2048
-hop_length: 256
-n_mels: 256 # spectrogram: n_mels x n_mels
-augment: True
-n_augment: 5
+num_classes: 10
 
 # Train specifics
-batch_size: 16
-learning_rate: 0.001
+batch_size: 32
+learning_rate: 0.0001
 validation_split: 0.2
 test_split: 0.1
 n_epochs: 100
-optimizer: 'SGD'
+optimizer: 'Adam'
 scheduler: 'plateau'
 accumulation_steps: 4
 grad_clip: False
@@ -31,31 +20,31 @@ grad_clip: False
 checkpoint_interval: 20
 
 model_config: 
-  img_size: 256
+  img_size: 32
   patch_size: 16
   in_channels: 1
-  num_classes: 50
+  num_classes: 10
   d_model: 512
   layers: 6
   heads: 8
   h_dim: 2048
-  dropout: 0.1
+  dropout: 0.3
   norm_bias: False
 
 # Wandb logs specifics
 wandb_config:
-  project: 'ViT-Speech'
+  project: 'ViT-Speech-CIFAR10'
   config:
     epochs: 100
     batch_size: 16
     learning_rate: 0.001
-    optimizer: 'SGD'
-    img_size: 256
+    optimizer: 'Adam'
+    img_size: 32
     patch_size: 16
     in_channels: 1
-    num_classes: 50
+    num_classes: 10
     d_model: 512
     layers: 6
     heads: 8
-    h_dim: 1024
-    dropout: 0.2
+    h_dim: 2048
+    dropout: 0.3
