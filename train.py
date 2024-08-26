@@ -112,7 +112,7 @@ def train(
 
             if (batch_idx + 1) % 10 == 0: # Maybe the same as ACCUMULATION_STEPS to match the gradient accumulation?
                 avg_loss = running_train_loss / (batch_idx + 1)
-                print(f'Epoch [{epoch+1}/{n_epochs}] - Step [{batch_idx+1}/{len(train_dataloader)}] - Loss: {avg_loss:.3f}')
+                print(f'Epoch [{epoch+1}/{n_epochs}] - Step [{batch_idx+1}/{len(train_dataloader)}] - Loss: {avg_loss:.3f} - Lr: {optimizer.param_groups[0]["lr"]:.6f}')
         
         epoch_train_loss = running_train_loss / len(train_dataloader)
         train_accuracy, train_f1_macro, train_f1_micro, train_precision, train_recall = train_accuracy.compute(), f1_macro.compute(), f1_micro.compute(), precision.compute(), recall.compute()
