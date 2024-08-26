@@ -35,17 +35,19 @@ def set_scheduler(optimizer: optim.Optimizer, scheduler: str = 'plateau') -> opt
             optimizer,
             schedulers=[
                 LinearLR(
-                    optimizer, 
-                    factor=1.0, 
-                    total_iters=5
-                ),
-                CosineAnnealingLR(
                     optimizer,
-                    T_max=10,
-                    eta_min=1e-5
+                    start_factor=0.0001,
+                    end_factor=1.0,
+                    total_iters=5000
+                ),
+                LinearLR(
+                    optimizer,
+                    start_factor=1.0,
+                    end_factor=0.0001,
+                    total_iters=32000
                 )
             ],
-            milestones=[10]
+            milestones=[5000]
         )
     
     elif scheduler == 'none':

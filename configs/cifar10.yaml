@@ -7,12 +7,12 @@ num_classes: 10
 
 # Train specifics
 batch_size: 32
-learning_rate: 0.01
+learning_rate: 0.0001
 validation_split: 0.2
 test_split: 0.1
 n_epochs: 100
 optimizer: 'Adam'
-scheduler: 'plateau'
+scheduler: 'none'
 accumulation_steps: 4
 grad_clip: False
 

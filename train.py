@@ -29,12 +29,19 @@ TO DO:
 """
 
 def save_checkpoint(model, optimizer, scheduler, epoch, path):
-    torch.save({
-        'epoch': epoch,
-        'model_state_dict': model.state_dict(),
-        'optimizer_state_dict': optimizer.state_dict(),
-        'scheduler_state_dict': scheduler.state_dict()
-    }, path)
+    if scheduler is not None:
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'scheduler_state_dict': scheduler.state_dict()
+        }, path)
+    else:
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict()
+        }, path)
 
 
 def train(
@@ -95,13 +102,16 @@ def train(
                 optimizer.step()
                 optimizer.zero_grad()
 
+                if scheduler is not None and not isinstance(scheduler, optim.lr_scheduler.ReduceLROnPlateau):
+                    scheduler.step()
+
                 if wandb_log:
                     global_step += 1
                     if global_step % log_interval == 0:
                         wandb.log({
                             'step': global_step,
                             'train_loss': running_train_loss / (batch_idx + 1),
-                            'learning_rate': scheduler.get_last_lr()[0]
+                            'learning_rate': optimizer.param_groups[0]['lr']
                         }) 
 
                 train_accuracy.update(outputs, labels)
@@ -157,9 +167,9 @@ def train(
         epoch_val_loss = running_val_loss / len(val_dataloader)
         val_accuracy, val_f1_macro, val_f1_micro, val_precision, val_recall = val_accuracy.compute(), val_f1_macro.compute(), val_f1_micro.compute(), val_precision.compute(), val_recall.compute()
 
-        if scheduler is not None:
+        if scheduler is not None and isinstance(scheduler, optim.lr_scheduler.ReduceLROnPlateau):
             scheduler.step(epoch_val_loss)
-
+        
         if epoch_val_loss < best_val_loss:
             best_val_loss = epoch_val_loss
             save_checkpoint(model, optimizer, scheduler, epoch, 'checkpoints/best_model.pt')
@@ -175,14 +185,14 @@ def train(
                 'val_recall': val_recall.item()
             })
 
-        print(f'Learning rate: {scheduler.get_last_lr()[0]}')
+        print(f' LR: {optimizer.param_groups[0]['lr']}')
         print(f'Epoch [{epoch+1}/{n_epochs}] - Train Loss: {epoch_train_loss:.3f} - Val Loss: {epoch_val_loss:.3f} || Val Accuracy: {val_accuracy.item():.3f}')
         print(f'Val F1-Macro: {val_f1_macro.item():.3f} || Val F1-Micro: {val_f1_micro.item():.3f} || Val Precision: {val_precision.item():.3f} || Val Recall: {val_recall.item():.3f}')
 
-
         if epoch % checkpoint_interval == 0 and epoch != 0:
-            checkpoint_path = os.path.join('checkpoints', f'checkpoint_{epoch+1}.pt')
-            save_checkpoint(model, optimizer, scheduler, epoch, checkpoint_path)
+            if scheduler is not None:
+                checkpoint_path = os.path.join('checkpoints', f'checkpoint_{epoch+1}.pt')
+                save_checkpoint(model, optimizer, scheduler, epoch, checkpoint_path)
 
     print("Training complete.")
 
