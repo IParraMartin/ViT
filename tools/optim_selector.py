@@ -21,6 +21,6 @@ def set_optimizer(optimizer: str, model: torch.nn.Module, learning_rate: float) 
             model.parameters(), 
             lr=learning_rate, 
             weight_decay=0.01,
-            betas=(0.9, 0.99),
-            eps=1e-9
+            betas=(0.9, 0.999),
+            eps=1e-8
         )

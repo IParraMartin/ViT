@@ -1,0 +1,17 @@
+Calculate steps from epochs
+-------------------------------------
+TrEx        = train examples
+ValEx       = validation examples
+BS          = Batch size
+GradAcc     = Gradient accumulation
+e           = epochs
+-------------------------------------
+
+TrainBacthes = TrEx / BS
+NOptimSteps = TrainBacthes / GradAcc
+TotalTrainingSteps = NOptimSteps * e
+
+ValBatches = ValEx / BS
+TotalValidationSteps = ValBatches * e (if val after each epoch)
+
+T = TotalTrainingSteps + TotalValidationSteps

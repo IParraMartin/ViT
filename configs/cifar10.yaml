@@ -6,11 +6,11 @@ seed: 1337
 num_classes: 10
 
 # Train specifics
-batch_size: 32
-learning_rate: 0.0001
+batch_size: 16
+learning_rate: 0.0003
 validation_split: 0.2
 test_split: 0.1
-n_epochs: 100
+n_epochs: 200
 optimizer: 'Adam'
 scheduler: 'none'
 accumulation_steps: 4
@@ -21,14 +21,14 @@ checkpoint_interval: 20
 
 model_config: 
   img_size: 32
-  patch_size: 16
+  patch_size: 4
   in_channels: 1
   num_classes: 10
   d_model: 512
   layers: 6
   heads: 8
   h_dim: 2048
-  dropout: 0.3
+  dropout: 0.1
   norm_bias: False
 
 # Wandb logs specifics
@@ -37,7 +37,7 @@ wandb_config:
   config:
     epochs: 100
     batch_size: 16
-    learning_rate: 0.001
+    learning_rate: 0.0001
     optimizer: 'Adam'
     img_size: 32
     patch_size: 16
@@ -47,4 +47,4 @@ wandb_config:
     layers: 6
     heads: 8
     h_dim: 2048
-    dropout: 0.3
+    dropout: 0.1
