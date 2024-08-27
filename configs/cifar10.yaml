@@ -7,12 +7,12 @@ num_classes: 10
 
 # Train specifics
 batch_size: 16
-learning_rate: 0.0003
+learning_rate: 0.001
 validation_split: 0.2
 test_split: 0.1
 n_epochs: 200
 optimizer: 'Adam'
-scheduler: 'none'
+scheduler: 'cosine'
 accumulation_steps: 4
 grad_clip: False
 
@@ -27,7 +27,7 @@ model_config:
   d_model: 512
   layers: 6
   heads: 8
-  h_dim: 2048
+  h_dim: 1024
   dropout: 0.1
   norm_bias: False
 
@@ -37,14 +37,14 @@ wandb_config:
   config:
     epochs: 100
     batch_size: 16
-    learning_rate: 0.0001
+    learning_rate: 0.00003
     optimizer: 'Adam'
     img_size: 32
-    patch_size: 16
+    patch_size: 4
     in_channels: 1
     num_classes: 10
     d_model: 512
     layers: 6
     heads: 8
-    h_dim: 2048
+    h_dim: 1024
     dropout: 0.1

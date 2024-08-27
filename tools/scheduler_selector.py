@@ -12,7 +12,7 @@ def set_scheduler(optimizer: optim.Optimizer, scheduler: str = 'plateau') -> opt
         return LinearLR(
             optimizer,
             start_factor=0.01,
-            end_factor=0.001,
+            end_factor=0.00001,
             total_iters=62500
         )
 
@@ -31,11 +31,11 @@ def set_scheduler(optimizer: optim.Optimizer, scheduler: str = 'plateau') -> opt
             patience=3
         )
     
-    elif scheduler == 'cosine': # T_max = number of epochs after which the scheduler will reset, eta_min = minimum learning rate
+    elif scheduler == 'cosine': # T_max = number of epochs/steps after which the scheduler will reset, eta_min = minimum learning rate
         return CosineAnnealingLR(
             optimizer, 
             T_max=100,
-            eta_min=1e-5
+            eta_min=1e-6
         )
     
     elif scheduler == 'sequential': # milestones = List of epoch indices. Must be increasing.
