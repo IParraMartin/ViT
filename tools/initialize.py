@@ -1,5 +1,6 @@
 # Initialize weights
 import torch.nn as nn
+import math
 
 # BERT-like weight initialization
 def init_weights(model: nn.Module) -> None:
@@ -30,7 +31,7 @@ def init_weights(model: nn.Module) -> None:
                 flag_convolutional = True
 
         elif isinstance(m, nn.MultiheadAttention):
-            nn.init.normal_(m.in_proj_weight, mean=0.0, std=0.02)
+            nn.init.normal_(m.in_proj_weight, mean=0.0, std=0.02) # We can also try to initialize as they do in the GPT2 paper (std=0.02/math.sqrt(2 * n_layers))
             if m.in_proj_bias is not None:
                 nn.init.zeros_(m.in_proj_bias)
             if not flag_multi_head_attn:
