@@ -37,8 +37,8 @@ if __name__ == '__main__':
     set_seed(config['seed'])
         
     transformation = transforms.Compose([
-        transforms.Grayscale(num_output_channels=1),
         # transforms.Resize((128, 128)),
+        transforms.Grayscale(num_output_channels=1),
         transforms.ToTensor(),
         transforms.Normalize((0.4813,), (0.2386,))
     ])

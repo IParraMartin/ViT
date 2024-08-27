@@ -28,7 +28,7 @@ def set_scheduler(optimizer: optim.Optimizer, scheduler: str = 'plateau') -> opt
             optimizer, 
             mode='min',
             factor=0.1,
-            patience=3
+            patience=2
         )
     
     elif scheduler == 'cosine': # T_max = number of epochs/steps after which the scheduler will reset, eta_min = minimum learning rate
@@ -44,18 +44,18 @@ def set_scheduler(optimizer: optim.Optimizer, scheduler: str = 'plateau') -> opt
             schedulers=[
                 LinearLR(
                     optimizer,
-                    start_factor=0.0001,
+                    start_factor=0.01,
                     end_factor=1.0,
-                    total_iters=5000
+                    total_iters=2000
                 ),
                 LinearLR(
                     optimizer,
                     start_factor=1.0,
-                    end_factor=0.0001,
-                    total_iters=32000
+                    end_factor=0.001,
+                    total_iters=62500
                 )
             ],
-            milestones=[5000]
+            milestones=[2000]
         )
     
     elif scheduler == 'none':
