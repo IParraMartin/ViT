@@ -12,9 +12,9 @@ validation_split: 0.2
 test_split: 0.1
 n_epochs: 200
 optimizer: 'Adam'
-scheduler: 'sequential'
+scheduler: 'plateau'
 accumulation_steps: 4
-grad_clip: False
+grad_clip: True
 
 # Checkpoints
 checkpoint_interval: 20
