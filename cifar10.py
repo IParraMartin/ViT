@@ -4,6 +4,7 @@ import torchvision
 from torchvision import transforms
 from torch.utils.data import DataLoader, random_split
 import numpy as np
+import wandb
 
 from train import train, evaluate
 from vit import VisionTransformer
@@ -12,18 +13,24 @@ import certifi
 import os
 import yaml
 import random
+import argparse
 
 from tools.optim_selector import set_optimizer
 from tools.scheduler_selector import set_scheduler
-from tools.get_mean_std import get_mean_and_std
-
-
-os.environ['SSL_CERT_FILE'] = certifi.where()
 
 
 if __name__ == '__main__':
 
-    with open('configs/cifar10.yaml', 'r') as f:
+    parser = argparse.ArgumentParser(description='Train a Vision Transformer model on CIFAR10')
+    parser.add_argument('--config', type=str, default='configs/cifar10.yaml', help='Path to the configuration file')
+    parser.add_argument('--log_wandb', dest='log_wandb', action='store_true', help='Log metrics to wandb')
+    parser.add_argument('--no_log_wandb', dest='log_wandb', action='store_false', help='Do not log metrics to wandb')
+    parser.set_defaults(log_wandb=False)
+    args = parser.parse_args()
+
+    os.environ['SSL_CERT_FILE'] = certifi.where()
+
+    with open(args.config, 'r') as f:
         config = yaml.safe_load(f)
 
     def set_seed(seed):
@@ -76,6 +83,10 @@ if __name__ == '__main__':
     optimizer = set_optimizer(config['optimizer'], model, config['learning_rate'])
     scheduler = set_scheduler(optimizer, config['scheduler'])
 
+    if args.log_wandb:
+        wandb.login()
+        wandb.init(**config['wandb_config'])
+
     train(
         model=model,
         n_epochs=config['n_epochs'],
@@ -99,3 +110,6 @@ if __name__ == '__main__':
         criterion=criterion,
         device=device
     )
+
+    if args.log_wandb:
+        wandb.finish()

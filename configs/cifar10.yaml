@@ -8,8 +8,6 @@ num_classes: 10
 # Train specifics
 batch_size: 8
 learning_rate: 0.001
-validation_split: 0.2
-test_split: 0.1
 n_epochs: 200
 optimizer: 'Adam'
 scheduler: 'plateau'
