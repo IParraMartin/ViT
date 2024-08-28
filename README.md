@@ -21,3 +21,8 @@ cd Desktop/ViT
 ```
 python3 train.py --config configs/vit_base.yaml --no_log_wandb
 ```
+
+To train the model on the CIFAR10 dataset, use the following command:
+```
+python3 cifar10_train.py --config configs/cifar10.yaml --no_log_wandb
+```
