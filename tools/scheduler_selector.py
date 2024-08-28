@@ -6,7 +6,7 @@ from transformers import get_scheduler
 
 def set_scheduler(optimizer: optim.Optimizer, scheduler: str = 'plateau') -> optim.lr_scheduler:
 
-    assert scheduler in ['linear', 'step', 'plateau', 'cosine', 'sequential', 'none'], 'Invalid scheduler. Choose between linear, step, plateau, cosine, sequential, or none'
+    assert scheduler in ['linear', 'step', 'plateau', 'cosine', 'linear_warmup', 'none'], "Invalid scheduler. Choose between 'linear', 'step', 'plateau', 'cosine', 'linear_warmup', or 'none'."
 
     if scheduler == 'linear':
         return LinearLR(
@@ -40,28 +40,28 @@ def set_scheduler(optimizer: optim.Optimizer, scheduler: str = 'plateau') -> opt
             eta_min=1e-6
         )
     
-    elif scheduler == 'sequential': # milestones = List of epoch indices. Must be increasing.
+    elif scheduler == 'linear_warmup': # milestones = List of epoch indices. Must be increasing.
         return SequentialLR(
             optimizer,
             schedulers=[
                 LinearLR(
                     optimizer,
-                    start_factor=0.001,
+                    start_factor=0.00001,
                     end_factor=1.0,
-                    total_iters=2000
+                    total_iters=4000
                 ),
                 LinearLR(
                     optimizer,
                     start_factor=1.0,
                     end_factor=0.001,
-                    total_iters=62500
+                    total_iters=121000
                 )
             ],
-            milestones=[2000]
+            milestones=[4000]
         )
     
     elif scheduler == 'none':
         return None
     
     else:
-        raise ValueError('Invalid scheduler. Choose between linear, step, plateau, cosine, sequential, or none')
+        raise ValueError("Invalid scheduler. Choose between 'linear', 'step', 'plateau', 'cosine', 'linear_warmup', or 'none'.")

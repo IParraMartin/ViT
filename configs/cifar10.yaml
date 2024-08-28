@@ -7,12 +7,12 @@ num_classes: 10
 
 # Train specifics
 batch_size: 8
-learning_rate: 0.001
-n_epochs: 200
-optimizer: 'Adam'
-scheduler: 'plateau'
+learning_rate: 0.01
+n_epochs: 50
+optimizer: 'SGD'
+scheduler: 'linear_warmup'
 accumulation_steps: 4
-grad_clip: True
+grad_clip: False
 
 # Checkpoints
 checkpoint_interval: 20
@@ -22,10 +22,10 @@ model_config:
   patch_size: 4
   in_channels: 1
   num_classes: 10
-  d_model: 512
-  layers: 6
-  heads: 8
-  h_dim: 2048
+  d_model: 768
+  layers: 12
+  heads: 12
+  h_dim: 3072
   dropout: 0.0
   norm_bias: False
 
