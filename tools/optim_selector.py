@@ -9,7 +9,7 @@ def set_optimizer(optimizer: str, model: torch.nn.Module, learning_rate: float) 
         return optim.SGD(
             model.parameters(), 
             lr=learning_rate, 
-            weight_decay=0.001, 
+            weight_decay=0.03, 
             momentum=0.9
         )
     
@@ -17,7 +17,7 @@ def set_optimizer(optimizer: str, model: torch.nn.Module, learning_rate: float) 
         return optim.AdamW(
             model.parameters(), 
             lr=learning_rate, 
-            weight_decay=0.001,
+            weight_decay=0.03,
             betas=(0.9, 0.999),
             eps=1e-8
         )
@@ -26,7 +26,7 @@ def set_optimizer(optimizer: str, model: torch.nn.Module, learning_rate: float) 
         return optim.Adam(
             model.parameters(), 
             lr=learning_rate, 
-            weight_decay=0.001,
+            weight_decay=0.03,
             betas=(0.9, 0.999),
             eps=1e-8
         )

@@ -42,13 +42,20 @@ if __name__ == '__main__':
         random.seed(seed)
 
     set_seed(config['seed'])
-        
-    transformation = transforms.Compose([
-        # transforms.Resize((128, 128)),
-        transforms.Grayscale(num_output_channels=1),
-        transforms.ToTensor(),
-        transforms.Normalize((0.4813,), (0.2386,))
-    ])
+    
+    if config['resize']:
+        transformation = transforms.Compose([
+            transforms.Resize((64, 64)),
+            transforms.Grayscale(num_output_channels=1),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4818), (0.1885))
+        ])
+    else:
+        transformation = transforms.Compose([
+            transforms.Grayscale(num_output_channels=1),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4813,), (0.2386,))
+        ])
 
     cifar_10_train = torchvision.datasets.CIFAR10(
         root='./cifar',

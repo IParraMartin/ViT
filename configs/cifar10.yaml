@@ -4,12 +4,13 @@ seed: 1337
 
 # Data/Audio specifics
 num_classes: 10
+resize: True
 
 # Train specifics
-batch_size: 8
-learning_rate: 0.01
+batch_size: 32
+learning_rate: 0.003
 n_epochs: 50
-optimizer: 'SGD'
+optimizer: 'Adam'
 scheduler: 'linear_warmup'
 accumulation_steps: 4
 grad_clip: False
@@ -18,15 +19,15 @@ grad_clip: False
 checkpoint_interval: 20
 
 model_config: 
-  img_size: 32
-  patch_size: 4
+  img_size: 64
+  patch_size: 8
   in_channels: 1
   num_classes: 10
   d_model: 768
   layers: 12
   heads: 12
   h_dim: 3072
-  dropout: 0.0
+  dropout: 0.1
   norm_bias: False
 
 # Wandb logs specifics

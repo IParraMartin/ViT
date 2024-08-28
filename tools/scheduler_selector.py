@@ -46,18 +46,18 @@ def set_scheduler(optimizer: optim.Optimizer, scheduler: str = 'plateau') -> opt
             schedulers=[
                 LinearLR(
                     optimizer,
-                    start_factor=0.00001,
+                    start_factor=0.01,
                     end_factor=1.0,
-                    total_iters=4000
+                    total_iters=6250
                 ),
                 LinearLR(
                     optimizer,
                     start_factor=1.0,
-                    end_factor=0.001,
-                    total_iters=121000
+                    end_factor=0.1,
+                    total_iters=118750
                 )
             ],
-            milestones=[4000]
+            milestones=[6250]
         )
     
     elif scheduler == 'none':
