@@ -3,7 +3,6 @@ import torch.nn.functional as F
 import torch.nn as nn
 from torch import optim
 
-from torchsummary import summary
 import yaml
 import tools.initialize as initialize
 
@@ -67,20 +66,19 @@ class Attention(nn.Module):
 
 class MLP(nn.Module):
 
-    def __init__(self, in_features: int, h_dim: int, out_features: int, dropout: float = 0.1):
+    def __init__(self, d_model: int, h_dim: int, dropout: float = 0.1):
         super().__init__()
-        self.fc1 = nn.Linear(in_features, h_dim)
-        self.fc2 = nn.Linear(h_dim, out_features)
-        self.dropout = nn.Dropout(dropout)
+        self.net = nn.Sequential(
+            nn.LayerNorm(d_model),
+            nn.Linear(d_model, h_dim),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(h_dim, d_model),
+            nn.Dropout(dropout)
+        )
         
     def forward(self, x) -> torch.Tensor:
-        # Usual forward pass of MLP (with gelu)
-        x = self.fc1(x)
-        x = F.gelu(x)
-        x = self.dropout(x)
-        x = self.fc2(x)
-        x = self.dropout(x)
-        return x
+        return self.net(x)
 
 
 class EncoderBlock(nn.Module):
@@ -101,7 +99,7 @@ class EncoderBlock(nn.Module):
         # Set the multi-head attention
         self.attn = Attention(d_model=d_model, heads=heads, dropout=dropout, kv_bias=kv_bias)
         # Set the MLP
-        self.mlp = MLP(in_features=d_model, h_dim=h_dim, out_features=d_model, dropout=dropout)
+        self.mlp = MLP(d_model=d_model, h_dim=h_dim, dropout=dropout)
 
     def forward(self, x) -> torch.Tensor:
         # EncoderBlock block with residual connections
@@ -132,7 +130,7 @@ class VisionTransformer(nn.Module):
         self.patch_embed = PatchEmbeddingsConv(img_size=img_size, patch_size=patch_size, in_channels=in_channels, d_model=d_model)
         # Create the CLS token and position embeddings (learnable parameters)
         self.cls_token = nn.Parameter(torch.randn(1, 1, d_model))
-        self.pos_embedding = nn.Parameter(torch.zeros(1, 1 + self.patch_embed.n_patches, d_model))
+        self.pos_embedding = nn.Parameter(torch.randn(1, self.patch_embed.n_patches + 1, d_model))
         # Create the transformer layers
         self.blocks = nn.ModuleList([
             EncoderBlock(d_model=d_model, heads=heads, h_dim=h_dim, dropout=dropout, norm_bias=norm_bias)
