@@ -8,10 +8,10 @@ resize: True
 
 # Train specifics
 batch_size: 64
-learning_rate: 0.003
+learning_rate: 0.001
 n_epochs: 50
 optimizer: 'Adam'
-scheduler: 'linear_warmup'
+scheduler: 'plateau'
 accumulation_steps: 4
 grad_clip: False
 
