@@ -7,7 +7,7 @@ num_classes: 10
 resize: True
 
 # Train specifics
-batch_size: 32
+batch_size: 64
 learning_rate: 0.003
 n_epochs: 50
 optimizer: 'Adam'

@@ -17,6 +17,7 @@ import argparse
 
 from tools.optim_selector import set_optimizer
 from tools.scheduler_selector import set_scheduler
+from tools.get_mean_std import get_mean_and_std
 
 
 if __name__ == '__main__':
@@ -46,15 +47,19 @@ if __name__ == '__main__':
     if config['resize']:
         transformation = transforms.Compose([
             transforms.Resize((64, 64)),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandAugment(num_ops=2, magnitude=5),
             transforms.Grayscale(num_output_channels=1),
             transforms.ToTensor(),
-            transforms.Normalize((0.4818), (0.1885))
+            transforms.Normalize((0.4609,), (0.2170,))
         ])
     else:
         transformation = transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+            transforms.RandAugment(num_ops=2, magnitude=5),
             transforms.Grayscale(num_output_channels=1),
             transforms.ToTensor(),
-            transforms.Normalize((0.4813,), (0.2386,))
+            transforms.Normalize((0.4641,), (0.2221,))
         ])
 
     cifar_10_train = torchvision.datasets.CIFAR10(
