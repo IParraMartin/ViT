@@ -28,6 +28,7 @@ accumulation_steps: 4
 grad_clip: False
 
 # Checkpoints
+checkpoints_path: 'model_check'
 checkpoint_interval: 20
 
 model_config: 
