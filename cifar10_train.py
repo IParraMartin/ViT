@@ -17,7 +17,6 @@ import argparse
 
 from tools.optim_selector import set_optimizer
 from tools.scheduler_selector import set_scheduler
-from tools.get_mean_std import get_mean_and_std
 
 
 if __name__ == '__main__':
