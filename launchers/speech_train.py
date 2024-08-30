@@ -9,6 +9,9 @@ import yaml
 import wandb
 import argparse
 
+import sys
+sys.path.append('/Users/inigoparra/Desktop/ViT')
+
 from vit import VisionTransformer
 from data import AudioData
 

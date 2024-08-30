@@ -6,6 +6,9 @@ from torch.utils.data import DataLoader, random_split
 import numpy as np
 import wandb
 
+import sys
+sys.path.append('/Users/inigoparra/Desktop/ViT')
+
 from train import train, evaluate
 from vit import VisionTransformer
 
