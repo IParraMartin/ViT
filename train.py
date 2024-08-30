@@ -222,4 +222,3 @@ def evaluate(model: nn.Module, test_dataloader: DataLoader, num_classes: int, cr
     print(f'Test F1-Macro: {test_f1_macro.item():.3f} || Test F1-Micro: {test_f1_micro.item():.3f} || Test Precision: {test_precision.item():.3f} || Test Recall: {test_recall.item():.3f}')
 
     print("Evaluation complete.")
-
