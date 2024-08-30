@@ -22,12 +22,13 @@ learning_rate: 0.001
 validation_split: 0.2
 test_split: 0.1
 n_epochs: 100
-optimizer: 'SGD'
+optimizer: 'Adam'
 scheduler: 'plateau'
 accumulation_steps: 4
 grad_clip: False
 
 # Checkpoints
+chekpoints_path: 'model_check'
 checkpoint_interval: 20
 
 model_config: 
@@ -35,10 +36,10 @@ model_config:
   patch_size: 16
   in_channels: 1
   num_classes: 50
-  d_model: 256
-  layers: 4
-  heads: 8
-  h_dim: 1024
+  d_model: 512
+  layers: 8
+  heads: 6
+  h_dim: 2048
   dropout: 0.1
   norm_bias: False
 
@@ -49,13 +50,13 @@ wandb_config:
     epochs: 100
     batch_size: 16
     learning_rate: 0.001
-    optimizer: 'SGD'
+    optimizer: 'Adam'
     img_size: 256
     patch_size: 16
     in_channels: 1
     num_classes: 50
-    d_model: 256
-    layers: 4
-    heads: 8
-    h_dim: 1024
+    d_model: 768
+    layers: 12
+    heads: 12
+    h_dim: 2048
     dropout: 0.1

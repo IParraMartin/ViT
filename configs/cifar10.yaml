@@ -1,4 +1,5 @@
 # MODEL CONFIG
+
 # Seed
 seed: 1337
 
@@ -7,7 +8,7 @@ num_classes: 10
 resize: True
 
 # Train specifics
-batch_size: 64
+batch_size: 16
 learning_rate: 0.001
 n_epochs: 50
 optimizer: 'Adam'
@@ -16,6 +17,7 @@ accumulation_steps: 4
 grad_clip: False
 
 # Checkpoints
+checkpoints_path: 'model_check'
 checkpoint_interval: 20
 
 model_config: 
@@ -38,12 +40,12 @@ wandb_config:
     batch_size: 16
     learning_rate: 0.001
     optimizer: 'Adam'
-    img_size: 32
-    patch_size: 4
+    img_size: 64
+    patch_size: 8
     in_channels: 1
     num_classes: 10
-    d_model: 512
-    layers: 6
-    heads: 8
-    h_dim: 2048
-    dropout: 0.0
+    d_model: 768
+    layers: 12
+    heads: 12
+    h_dim: 3072
+    dropout: 0.1

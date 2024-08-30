@@ -23,9 +23,9 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Train a Vision Transformer model on CIFAR10')
     parser.add_argument('--config', type=str, default='configs/cifar10.yaml', help='Path to the configuration file')
+    parser.add_argument('--device', type=str, default='mps', help='Device on which the model will be trained.')
     parser.add_argument('--log_wandb', dest='log_wandb', action='store_true', help='Log metrics to wandb')
     parser.add_argument('--no_log_wandb', dest='log_wandb', action='store_false', help='Do not log metrics to wandb')
-    parser.add_argument('--device', type=str, default='cuda', help='Device on which the model will be trained.')
     parser.set_defaults(log_wandb=False)
     args = parser.parse_args()
 
@@ -131,7 +131,8 @@ if __name__ == '__main__':
         wandb_log=False,
         checkpoint_interval=config['checkpoint_interval'],
         ACCUMULATION_STEPS=config['accumulation_steps'],
-        grad_clip=config['grad_clip']
+        grad_clip=config['grad_clip'],
+        save_path=config['checkpoints_path']
     )
 
     evaluate(
