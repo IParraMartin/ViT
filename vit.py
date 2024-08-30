@@ -175,19 +175,16 @@ if __name__ == '__main__':
 
     set_seed(1337)
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'mps')
+    device = torch.device('mps')
 
     with open('configs/vit_base.yaml', 'r') as f:
         config = yaml.safe_load(f)
     
     model_config = config['model_config']
-    model = VisionTransformer(**model_config)
-    fake_data = torch.randn(config['batch_size'], model_config['in_channels'], model_config['img_size'], model_config['img_size'])
-    fake_labels = torch.randint(0, model_config['num_classes'], (config['batch_size'],))
+    model = VisionTransformer(**model_config).to(device)
 
-    def send_to_device(data, labels, model, device):
-        return data.to(device), labels.to(device), model.to(device)
-    fake_data, fake_labels, model = send_to_device(fake_data, fake_labels, model, device)
+    fake_data = torch.randn(config['batch_size'], model_config['in_channels'], model_config['img_size'], model_config['img_size']).to(device)
+    fake_labels = torch.randint(0, model_config['num_classes'], (config['batch_size'],)).to(device)
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
