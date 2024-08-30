@@ -26,6 +26,7 @@ if __name__ == '__main__':
     parser.add_argument('--config', type=str, default='configs/cifar10.yaml', help='Path to the configuration file')
     parser.add_argument('--log_wandb', dest='log_wandb', action='store_true', help='Log metrics to wandb')
     parser.add_argument('--no_log_wandb', dest='log_wandb', action='store_false', help='Do not log metrics to wandb')
+    parser.add_argument('--device', type=str, default='cuda', help='Device on which the model will be trained.')
     parser.set_defaults(log_wandb=False)
     args = parser.parse_args()
 
@@ -90,7 +91,26 @@ if __name__ == '__main__':
     n_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f'Trainable parameters: {n_params / 1e6:.2f}M')
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
+    def set_device(use_device: str = 'cuda'):
+        assert use_device in ['cuda', 'mps', 'cpu'], "Device Error. Torch devices available: 'cuda', 'mps', or 'cpu'"
+        if use_device == 'cuda':
+            if torch.cuda.is_available():
+                device = torch.device('cuda')
+            else:
+                raise RuntimeError('CUDA is not available. Choose another device.')
+        elif use_device == 'mps':
+            if torch.backends.mps.is_available():
+                device = torch.device('mps')
+            else:
+                raise RuntimeError('MPS is not available. Choose another device.')
+        elif use_device == 'cpu':
+            device = torch.device('cpu')
+        else:
+            raise RuntimeError(f"Unknown device: {use_device}. Please use 'cuda', 'mps', or 'cpu'")
+        return device
+
+    device = set_device(args.device)
+
     criterion = nn.CrossEntropyLoss()
     optimizer = set_optimizer(config['optimizer'], model, config['learning_rate'])
     scheduler = set_scheduler(optimizer, config['scheduler'])
